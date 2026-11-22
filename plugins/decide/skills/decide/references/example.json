@@ -1,0 +1,77 @@
+{
+  "title": "decide Example",
+  "storageKey": "decide-example",
+  "eyebrow": "A sample review, to check the format after any change",
+  "heading": "Review three CLI decisions",
+  "intro": "Drafting the spec for a CLI turned up three open points. Each needs a yes or no before the spec is confirmed.",
+  "exportHeader": "DECIDE EXAMPLE ANSWERS",
+  "groupNoun": "module",
+  "groupNounTitle": "Module",
+  "groups": [
+    {
+      "id": "cli",
+      "label": "cli",
+      "summary": "How every command starts: finding the spec folder, the shared options, help text and exit codes.",
+      "review": {
+        "heading": "Is the cli module right?",
+        "intro": "It has 2 features. Open one to see its scenarios.",
+        "legend": "Should I confirm this module?",
+        "summaryLabel": "Confirm the module?",
+        "items": [
+          { "title": "Find the spec root", "count": "3 scenarios", "intro": "Where the CLI looks for the spec folder.", "details": [ { "id": "S1", "text": "--root names the spec root" }, { "id": "S2", "text": "--root wins over SPEC_ROOT" }, { "id": "S3", "text": "A symlinked CLI does not find its skill folder" } ], "ref": "CLI-002 · spec/modules/cli/features/CLI-002-find-the-spec-root.md" },
+          { "title": "Read the global options", "count": "2 scenarios", "details": [ { "id": "S1", "text": "Text is the default format" }, { "id": "S2", "text": "A depth that is not a whole number of 1 or more" } ], "ref": "CLI-003" }
+        ]
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "CLI-002#Q1", "group": "cli",
+      "h": "Should spec work when it is run through a symlink?",
+      "today": "A symlinked spec cannot find its spec folder. You have to pass --root.",
+      "why": "The launcher already follows the link to load the CLI. Only the folder lookup does not.",
+      "change": "Follow the link first, then look for the spec folder.",
+      "rec": "change", "recWhy": "A symlinked spec on PATH should just work.",
+      "ref": "CLI-002 Find the spec root",
+      "visual": {
+        "caption": "What you see when spec runs through a symlink on your PATH.",
+        "today": { "kind": "terminal", "lines": [ { "t": "~/bin/spec lint", "tone": "cmd" }, { "t": "no spec root: pass --root, set SPEC_ROOT, or run the bundled scripts/spec", "tone": "hi" }, { "t": "usage: spec <command> [options] …", "tone": "muted" } ], "exit": 2 },
+        "after": { "kind": "terminal", "lines": [ { "t": "~/bin/spec lint", "tone": "cmd" }, { "t": "lint clean", "tone": "hi" } ], "exit": 0 }
+      }
+    },
+    {
+      "id": "FMT-010#Q1", "group": "cli",
+      "h": "Should decisions keep their own statuses?",
+      "today": "Decisions use accepted and superseded. FORMAT.md says every unit uses active, deprecated or removed.",
+      "why": "The docs and the code disagree.",
+      "change": "Move decisions to active, deprecated and removed.",
+      "rec": "docs", "recWhy": "Accepted and superseded fit decisions. Say so in FORMAT.md.",
+      "visual": {
+        "caption": "A replaced decision's frontmatter.",
+        "today": { "kind": "file", "name": "decisions/ADR-001-widgets-have-sizes.md", "lines": [ { "t": "---", "tone": "muted" }, { "t": "id: ADR-001", "tone": "out" }, { "t": "status: superseded", "tone": "hi" }, { "t": "superseded_by: ADR-002", "tone": "out" } ] },
+        "after": { "kind": "file", "name": "decisions/ADR-001-widgets-have-sizes.md", "lines": [ { "t": "---", "tone": "muted" }, { "t": "id: ADR-001", "tone": "out" }, { "t": "status: superseded", "tone": "del" }, { "t": "status: removed", "tone": "add" }, { "t": "superseded_by: ADR-002", "tone": "out" } ] }
+      }
+    },
+    {
+      "id": "PIP-002#Q2", "group": "cli",
+      "h": "How should a ticket continue after three review rounds?",
+      "today": "It is stuck. Answering the question passes the gate, but every start is still refused.",
+      "why": "This is a dead end with no command out of it.",
+      "change": "Answering the question grants one more review round.",
+      "rec": "change", "recWhy": "A real dead end.",
+      "visual": {
+        "caption": "A task whose reviewer asked for changes three times.",
+        "today": { "kind": "steps", "steps": [ { "label": "reviewer: changes ×3", "state": "fail" }, { "label": "question answered", "state": "ok" }, { "label": "start refused", "state": "stuck" } ], "note": "Every start is refused." },
+        "after": { "kind": "steps", "steps": [ { "label": "reviewer: changes ×3", "state": "fail" }, { "label": "question answered", "state": "ok" }, { "label": "one more review", "state": "now" } ], "note": "Each answer grants one more round." }
+      }
+    }
+  ],
+  "extras": {
+    "heading": "Which bugs should I file?",
+    "startStep": "Pick the bugs to file.",
+    "legend": "Select all that should be filed",
+    "summaryHeading": "Bugs to file",
+    "exportLabel": "bugs to file",
+    "items": [ { "id": "plan double-listing", "text": "spec plan lists one ticket both under \"Needs a person\" and in a wave." } ]
+  }
+}
