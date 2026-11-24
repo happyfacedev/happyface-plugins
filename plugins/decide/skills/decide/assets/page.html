@@ -34,6 +34,7 @@ button, textarea { font: inherit; color: inherit; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
 .top { display: flex; align-items: center; gap: 1.1rem; min-height: 3.1rem; }
+.theme { flex: none; width: 2.1rem; height: 2.1rem; padding: 0; border: 2px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; } .theme:hover { border-color: var(--muted); } .theme svg { width: 1.1rem; height: 1.1rem; display: block; }
 .where { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bar { flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.35rem; min-width: 0; }
 .bar i { height: 8px; border-radius: 4px; background: var(--t); border: 1px solid var(--i); } .bar .seen { background: var(--h); border-color: var(--h); }
@@ -116,11 +117,28 @@ pre { background: var(--card); border-radius: 8px; padding: 0.8rem; font: 0.8125
 </style>
 
 <div class="app blue" id="app">
-  <div class="top"><button class="link" id="back" type="button">‹ Back</button><span class="bar" id="bar" aria-hidden="true"></span><span class="where" id="where"></span></div>
+  <div class="top"><button class="link" id="back" type="button">‹ Back</button><span class="bar" id="bar" aria-hidden="true"></span><span class="where" id="where"></span><button class="theme" id="theme" type="button"></button></div>
   <main id="view" tabindex="-1"></main>
   <div class="foot" id="foot"></div>
 </div>
 
+<script>
+// Light or dark follows the system (or the host page) until the button overrides it; switching back to match follows again.
+(() => {
+  const root = document.documentElement, host = root.getAttribute("data-theme"), dark = matchMedia("(prefers-color-scheme: dark)"), KEY = "happyface-theme", b = document.getElementById("theme");
+  const base = () => host || (dark.matches ? "dark" : "light"), now = () => root.getAttribute("data-theme") || base();
+  const paint = () => { const to = now() === "dark" ? "light" : "dark"; b.setAttribute("aria-label", "Switch to " + to + " mode"); b.title = "Switch to " + to + " mode"; b.innerHTML = to === "light" ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.7 8.7 0 1 0 10.7 10.7z"/></svg>'; };
+  try { const t = localStorage.getItem(KEY); if (t === "light" || t === "dark") root.setAttribute("data-theme", t); } catch (e) {}
+  b.addEventListener("click", () => {
+    const to = now() === "dark" ? "light" : "dark", follow = to === base();
+    if (!follow) root.setAttribute("data-theme", to); else if (host) root.setAttribute("data-theme", host); else root.removeAttribute("data-theme");
+    try { if (follow) localStorage.removeItem(KEY); else localStorage.setItem(KEY, to); } catch (e) {}
+    paint();
+  });
+  dark.addEventListener("change", paint);
+  paint();
+})();
+</script>
 <script>
 const CONFIG = __CONFIG__;
 </script>

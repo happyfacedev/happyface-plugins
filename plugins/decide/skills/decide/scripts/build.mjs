@@ -137,7 +137,7 @@ const html = readFileSync(join(here, '..', 'assets', 'page.html'), 'utf8').repla
 writeFileSync(out, html);
 
 const probe = join(tmpdir(), `decide-check-${process.pid}.js`);
-writeFileSync(probe, html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>')).replace('</script>\n<script>', '\n'));
+writeFileSync(probe, html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>')).replaceAll('</script>\n<script>', '\n'));
 const r = spawnSync(process.execPath, ['--check', probe], { encoding: 'utf8' });
 if (r.status !== 0) { console.error(r.stderr); process.exit(1); }
 console.log(`wrote ${out}: ${cfg.questions.length} questions, ${groups.filter((g) => g.review).length} group reviews${cfg.extras?.items?.length ? ', ' + cfg.extras.items.length + ' extras' : ''}, ${warn.length} warning(s)`);
