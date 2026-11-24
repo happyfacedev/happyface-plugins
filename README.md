@@ -6,7 +6,8 @@ The Claude Code marketplace for happyface. Add it once; every plugin listed here
 | --- | --- | --- | --- |
 | `spec` | `spec@happyface` | The spec workflow: a project specification, tickets, and staged agent roles | [happyfacedev/spec](https://github.com/happyfacedev/spec), `plugin/` |
 | `flutter` | `flutter@happyface` | Flutter conventions and pattern skills (`flutter:flutter-skill` and friends) | [happyfacedev/flutter-skill](https://github.com/happyfacedev/flutter-skill) |
-| `decide` | `decide@happyface` | A visual, one-question-at-a-time decision review page | this repo, `plugins/decide/` |
+| `decide` | `decide@happyface` | Make decisions on a visual page, one at a time, by seeing what each option means | this repo, `plugins/decide/` |
+| `visualize` | `visualize@happyface` | Understand a concept, a change or what the agent did, as a visual storyboard | this repo, `plugins/visualize/` |
 
 ## Install
 
@@ -17,6 +18,7 @@ In Claude Code:
 /plugin install spec@happyface
 /plugin install flutter@happyface
 /plugin install decide@happyface
+/plugin install visualize@happyface
 ```
 
 **Turn on auto-update once:** `/plugin` > Marketplaces > happyface > enable auto-update. Claude Code leaves it off for every marketplace that isn't Anthropic's, and a marketplace can't switch it on for you. With it on, Claude Code checks for new commits in the background after each session starts. Without it, run `/plugin marketplace update happyface`.
@@ -29,7 +31,7 @@ The same marketplace works in both:
 
 ```sh
 codex plugin marketplace add happyfacedev/happyface-plugins
-codex plugin add flutter@happyface     # also spec@happyface, decide@happyface
+codex plugin add flutter@happyface     # also spec, decide and visualize
 
 copilot plugin marketplace add happyfacedev/happyface-plugins
 copilot plugin install flutter@happyface

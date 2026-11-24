@@ -18,7 +18,12 @@
     {
       "name": "decide",
       "source": "./plugins/decide",
-      "description": "Turn several open questions into a visual review page answered one question at a time."
+      "description": "Make decisions on a visual page: each option is a picture of its result, with its cost."
+    },
+    {
+      "name": "visualize",
+      "source": "./plugins/visualize",
+      "description": "Explain a concept, a change or something the agent did as a bold visual storyboard."
     }
   ]
 }

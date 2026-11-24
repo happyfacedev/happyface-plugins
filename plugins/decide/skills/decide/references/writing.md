@@ -26,7 +26,7 @@ Plain language, following ISO 24495-1.
 
 ## Design
 
-- Atkinson Hyperlegible for text, JetBrains Mono for code. One accent, green for the recommendation, amber for warnings, red for permanent. Both themes are tokens.
+- Atkinson Hyperlegible for text, JetBrains Mono for code. Each question has its own color (blue, violet or orange). Teal always means recommended or done, rose always means permanent. The skin is shared with visualize. Both themes are tokens.
 - Keys 1–4 pick, Enter continues. Focus is always visible. Phones stack the options.
 
 ## Sources

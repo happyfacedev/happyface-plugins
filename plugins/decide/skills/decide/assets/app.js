@@ -64,6 +64,9 @@
     return n;
   };
   const dom = (s) => "s" + STEPS.indexOf(s);
+  // Teal means recommended or done and rose means permanent, so questions take turns with the other three.
+  const hue = (s) => (s.kind === "end" ? "teal" : ["blue", "violet", "orange"][STEPS.indexOf(s) % 3]);
+  const board = (s, tell, ...body) => view.append(el("section", { class: "board" }, el("div", { class: "tell" }, ...tell), el("div", { class: "body" }, ...body)));
 
   function picture(p) {
     if (!p) return null;
@@ -95,9 +98,7 @@
     const note = el("div", { class: "note", id: "note" }, el("label", { for: "notetext", text: T.noteLabel }), ta);
     note.hidden = !ta.value;
     const first = STEPS.indexOf(s) === 0;
-    view.append(
-      first && C.intro ? el("p", { class: "intro", text: C.intro }) : "",
-      el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : "", s.caption ? el("p", { class: "cap", text: s.caption }) : "", set,
+    board(s, [first && C.intro ? el("p", { class: "intro", text: C.intro }) : null, el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : null, s.caption ? el("p", { class: "cap", text: s.caption }) : null], set,
       (s.items || []).length ? el("div", { class: "items" }, ...s.items.map((it) => el("details", {}, el("summary", {}, it.title, it.count ? el("span", { class: "ft", text: it.count }) : null), it.intro ? el("p", { text: it.intro }) : null, el("ul", {}, ...(it.details || []).map((d) => el("li", {}, d.id ? d.id + " " : "", d.text))), it.ref ? el("span", { class: "ft", text: it.ref }) : null))) : "",
       note, s.ref ? el("p", { class: "ref", text: s.id + " · " + s.ref }) : "", el("p", { class: "status", id: "status", role: "status" }), el("pre", { id: "out", hidden: true }));
   }
@@ -112,7 +113,7 @@
         el("span", {}, el("b", { text: batch ? it.name : it.text }), batch ? el("span", { class: "ft", text: "Today: " + it.today }) : el("span", { class: "ft", text: it.id })),
         batch ? el("span", { class: "after" }, el("span", { class: "ft", text: "After" }), it.after) : null);
     });
-    view.append(el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : "", el("div", { class: "rows" }, ...boxes));
+    board(s, [el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : null], el("div", { class: "rows" }, ...boxes));
   }
 
   function answer(s) {
@@ -126,12 +127,12 @@
     const open = visible().filter((x) => x.kind !== "end" && answer(x) === "Not answered").length;
     const rows = STEPS.filter((x) => x.kind !== "end").map((x) => {
       const off = !shown(x), o = x.kind === "q" ? picked(x) : null, note = (S.n[x.id] || "").trim();
-      return el("div", { class: "row" }, el("span", { class: "q", text: x.h }),
-        el("span", { class: "a" + (off ? " skip" : "") }, off ? "Skipped: an earlier answer settled it" : answer(x), !off && o && x.rec && o.id !== x.rec ? el("span", { class: "tag", text: "Not my recommendation" }) : null, !off && o && o.permanent ? el("span", { class: "tag", text: "Permanent" }) : null),
+      return el("div", { class: "row " + hue(x) }, el("span", { class: "q", text: x.h }),
+        el("span", { class: "a" + (off ? " skip" : "") }, off ? "Skipped: an earlier answer settled it" : answer(x), !off && o && x.rec && o.id !== x.rec ? el("span", { class: "tag", text: "Not my recommendation" }) : null, !off && o && o.permanent ? el("span", { class: "tag perm", text: "Permanent" }) : null),
         note && !off ? el("span", { class: "n", text: "Note: " + note }) : null,
         off ? null : el("button", { class: "link", type: "button", onclick: () => { returning = true; go(visible().indexOf(x)); } }, "Change", el("span", { class: "sr", text: " " + x.h })));
     });
-    view.append(el("h1", { text: s.h }), el("p", { class: "why", text: (open ? open + " not answered; I will ask you about " + (open === 1 ? "it" : "them") + ". " : "") + T.safety }), el("div", { class: "rows" }, ...rows),
+    board(s, [el("h1", { text: s.h }), el("p", { class: "why", text: (open ? open + " not answered; I will ask you about " + (open === 1 ? "it" : "them") + ". " : "") + T.safety })], el("div", { class: "rows" }, ...rows),
       el("div", { class: "actions" }, el("button", { class: "btn", type: "button", onclick: copy }, T.copy), el("button", { class: "link", type: "button", onclick: () => { $("out").textContent = exportText(); $("out").hidden = !$("out").hidden; } }, "Show the text")),
       el("p", { class: "status", id: "status", role: "status" }), el("pre", { id: "out", hidden: true }));
   }
@@ -205,8 +206,8 @@
     view.replaceChildren();
     $("back").style.visibility = S.at ? "visible" : "hidden";
     $("where").textContent = single ? "" : s.kind === "end" ? "Done" : (groups.length > 1 && s.g ? (s.g.label || s.g.id) + " · " : "") + (S.at + 1) + " of " + total;
-    $("fill").parentNode.hidden = single;
-    $("fill").style.width = (S.at / Math.max(1, total)) * 100 + "%";
+    $("app").className = "app " + hue(s);
+    $("bar").replaceChildren(...(single ? [] : list.filter((x) => x.kind !== "end").map((x, i) => el("i", { class: hue(x) + (i <= S.at ? " seen" : "") }))));
     if (s.kind === "end") viewEnd(s); else if (s.kind === "q") viewQuestion(s); else viewList(s);
     foot(s);
   }

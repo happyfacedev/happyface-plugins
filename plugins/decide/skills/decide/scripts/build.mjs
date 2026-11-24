@@ -131,10 +131,9 @@ const LS = String.fromCharCode(0x2028), PS = String.fromCharCode(0x2029);
 const safeJson = (v) => JSON.stringify(v).replace(/</g, '\\u003c').split(LS).join('\\u2028').split(PS).join('\\u2029');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const app = readFileSync(join(here, '..', 'assets', 'app.js'), 'utf8');
-const html = readFileSync(join(here, '..', 'assets', 'page.html'), 'utf8')
-  .replace('__TITLE__', () => esc(cfg.title))
-  .replace('__CONFIG__', () => safeJson(cfg))
-  .replace('__APP__', () => app);
+// One pass, so text inside a review can never be taken for a placeholder.
+const fill = { TITLE: esc(cfg.title), CONFIG: safeJson(cfg), APP: app };
+const html = readFileSync(join(here, '..', 'assets', 'page.html'), 'utf8').replace(/__(TITLE|CONFIG|APP)__/g, (_, k) => fill[k]);
 writeFileSync(out, html);
 
 const probe = join(tmpdir(), `decide-check-${process.pid}.js`);
