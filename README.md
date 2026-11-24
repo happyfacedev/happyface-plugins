@@ -10,14 +10,7 @@ The Claude Code marketplace for happyface. Add it once; every plugin listed here
 
 ## Install
 
-The repositories are private, so git on your machine needs stored GitHub credentials first:
-
-```sh
-gh auth login
-gh auth setup-git
-```
-
-Then, in Claude Code:
+In Claude Code:
 
 ```text
 /plugin marketplace add happyfacedev/happyface-plugins
