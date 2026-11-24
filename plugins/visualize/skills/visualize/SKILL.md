@@ -10,7 +10,7 @@ description: Explain something as a visual storyboard page, one idea per step, e
 ## Procedure
 
 1. **Get it right first.**
-   - A concept: check anything that may have changed, such as records, status or prices, against a source. Compute numbers instead of recalling them.
+   - A concept: check anything that may have changed, such as records, status or prices, against a source. For "is it solved, true or current", use your most thorough and fresh search, look for news from this month, and then search for the opposite of what you believe; one quick search has missed week-old news. Open the primary source. Show the date you checked. Compute numbers instead of recalling them.
    - A change or something you did: read the real diff, files, logs and test output. Count from them.
 2. **Find the one thing the person should leave with.** Every step must lead there. Cut the rest.
 3. **Plan 3–8 steps**, one idea each, so each step makes the next one obvious.
