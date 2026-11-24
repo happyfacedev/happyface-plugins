@@ -50,10 +50,29 @@
     view.replaceChildren(
       el("section", { class: "board " + f.color },
         el("div", { class: "tell" }, el("span", { class: "no", text: "Step " + (at + 1) + " of " + F.length }), el("h1", { text: f.heading }), el("p", {}, rich(f.say)), f.big ? el("div", { class: "big" }, el("b", { text: f.big.value }), el("span", { text: f.big.label })) : null),
-        el("div", { class: "show" }, draw(f.pic), f.caption ? el("p", { class: "cap", text: f.caption }) : null, el("p", { class: "src" }, f.src, last && (C.sources || []).length ? [". Sources: ", C.sources.map((s, i) => [i ? ", " : "", el("a", { href: s.url, target: "_blank", rel: "noopener", text: s.label })])] : null))),
-      el("nav", { class: "nav", "aria-label": "Steps" }, F.map((x, n) => el("button", { class: x.color + (n < at ? " seen" : ""), type: "button", "aria-current": String(n === at), "aria-label": "Step " + (n + 1) + ": " + x.key, onclick: () => go(n) }, x.key))),
-      el("div", { class: "steps" }, el("button", { class: "ghost", type: "button", disabled: !at, onclick: () => go(at - 1) }, "‹ Back"), el("button", { class: "go " + f.color, id: "fwd", type: "button", onclick: () => go(last ? 0 : at + 1) }, last ? "Start again" : "Next: " + F[at + 1].key + " ›")));
+        el("div", { class: "show" }, el("div", { class: "fit" }, draw(f.pic)), f.caption ? el("p", { class: "cap", text: f.caption }) : null, el("p", { class: "src" }, f.src, last && (C.sources || []).length ? [". Sources: ", C.sources.map((s, i) => [i ? ", " : "", el("a", { href: s.url, target: "_blank", rel: "noopener", text: s.label })])] : null))),
+      el("div", { class: "steps" }, el("button", { class: "ghost", type: "button", disabled: !at, onclick: () => go(at - 1) }, "‹ Back"),
+        el("nav", { class: "nav", "aria-label": "Steps" }, F.map((x, n) => el("button", { class: x.color + (n < at ? " seen" : ""), type: "button", "aria-current": String(n === at), "aria-label": "Step " + (n + 1) + ": " + x.key, onclick: () => go(n) }, x.key))),
+        el("button", { class: "go " + f.color, id: "fwd", type: "button", onclick: () => go(last ? 0 : at + 1) }, last ? "Start again" : "Next: " + F[at + 1].key + " ›")));
+    fit();
   }
+  // Size each panel's content to its panel: the largest scale that does not overflow. Panels scroll only if even the smallest is too big.
+  function fit() {
+    const tell = view.querySelector(".tell"), show = view.querySelector(".show"), box = view.querySelector(".fit");
+    if (!tell) return;
+    const largest = (lo, hi, set, over) => { set(hi); if (!over()) return; for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; set(mid); if (over()) hi = mid; else lo = mid; } set(lo); };
+    const spills = (n) => n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1;
+    const small = innerWidth < 640 ? 0.78 : 0.6;
+    largest(small, 1.1, (v) => tell.style.setProperty("--s", v), () => spills(tell));
+    // A picture that is one drawing fills the space by itself; anything else is zoomed.
+    const art = box.querySelectorAll("svg");
+    box.classList.toggle("fill", art.length === 1 && (art[0].parentElement === box || art[0].parentElement.parentElement === box));
+    if (box.classList.contains("fill")) box.style.removeProperty("--z");
+    else largest(small, 1.2, (v) => box.style.setProperty("--z", v), () => spills(show) || spills(box));
+  }
+  addEventListener("resize", fit);
+  if (document.fonts) document.fonts.ready.then(fit);
+  $("ask").title = C.ask;
   $("ask").append(el("span", { text: "You asked: " }), C.ask);
   document.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest("input, textarea, select")) return;

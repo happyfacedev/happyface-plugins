@@ -55,4 +55,5 @@ PICS.wave = ({ el, svg, chart, state, rerender }) => {
 - `state` is kept per picture. `rerender(id)` redraws and focuses that id.
 - Use `var(--h)` for the step's solid color, `var(--t)` for its tint, `var(--i)` for its color on a background, and `var(--ink)`, `var(--card)`, `var(--muted)`, `var(--line)`. Never fixed colors. White text goes on `var(--h)`.
 - Classes ready to use: `tune` (a row of choices), `fillh`, `lineh`, `linea`, `ax`, `soft`.
+- The page is one screen and fits each picture to its panel. Return one `svg`, or a `div` holding controls and one `svg`, and the drawing fills the space; anything else is zoomed to fit. Set no heights or widths in pixels.
 - Give every `svg` `viewBox="0 0 760 400"`, `role="img"` and `aria-label`. Spread the drawing across it, and keep everything, text included, at least 30 units from every edge: what crosses an edge is cut off. Text of 17 or larger.
