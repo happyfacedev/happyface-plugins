@@ -1,51 +1,39 @@
 # Writing and design rules
 
-Every rule here comes from a source below. The format is fixed: follow it; don't redesign it.
+## Screens
 
-## One question per screen
+- **One decision per screen**, with the question as the heading. GOV.UK found this feels simpler even with more clicks.
+- **The picture is the answer.** People choose while looking at the result, not from a list below it.
+- **Everything needed to decide fits one desktop screen.** Short pictures and short facts keep it there.
+- **Always allow "Not sure".** End with a summary where any answer can be changed.
+- **Ask less.** Decide what you can, batch what is safe, skip what an earlier answer settles.
 
-- **One decision per screen**, with the question as the page heading (h1). Never show a list of questions to answer at once. Source: GOV.UK question pages and "one thing per page". Their research found step-by-step screens felt simpler even on large screens and with more clicks.
-- **Back at the top, Continue at the bottom left.** Show a caption like "cli · Question 3 of 51". Don't show a navigator that lists every question.
-- **Say why you are asking** (`why`), and **allow "Not sure"**. Both are GOV.UK rules.
-- **End with Check your answers**: every answer, a Change link on each, then Copy answers. Source: GOV.UK check answers pattern.
-- **Offer one shortcut on the start page**: "Accept all my recommendations and only check the summary".
+## Pictures
 
-## The picture comes first
-
-- Every question shows **Today** and **Change** side by side, above the explanation. Use the same kind of panel and the same command on both sides, so the only thing that differs is the answer.
-- **Highlight only the line the question is about** (at most 3). Everything else is context, and may be `muted` or elided with "…".
-- **Today is real.** Copy it from a run, the code or a test. Never paraphrase an error message on a Today panel. If you could not run it, take it from the tests or the spec, and say so in your reply.
-- **Change is a mock-up.** It follows the product's existing style (same prefixes, same summary lines) and shows only what `change` says. A detail you had to decide yourself, such as a new exit code or a message, you list in your reply so the person can push back.
-- **Each option says which picture it gives** ("You get the Today picture"). Picking an option outlines its panel and dims the other one.
+- **What happens now is real.** Copy it from a run, the code or a test. Say which in `src`.
+- **The alternatives are mock-ups** in the product's own style, showing only what `does` says. Tell the user which details you invented.
+- **Same kind, same command, on every option**, so the only difference is the answer. Highlight only that.
 
 ## Words
 
-Use plain language, following ISO 24495-1 and common plain-language checklists.
-- **The heading is the question**, ending in "?", 12 words or fewer. Start it with the subject: "Should merge check every argument first?", not "About argument checking in merge".
-- **`today`, `why`, `change`: one or two sentences each**, 20 words or fewer per sentence. One idea per sentence.
-- **Use everyday words. Name things by what the person sees**: the command, the message, the file. Don't name the internals: no function names, module names or "the parser".
-- **Front-load every line.** NN/g found that readers notice the first two words of headings, labels and list items most.
-- **Write IDs in `ref`, never in the heading.**
-- **Keep `change` concrete and complete.** It is the exact thing that happens on a Change answer, and the summary repeats it.
-- **Keep `recWhy` to the reason, not a restatement**: "Merging untested breaks INV-002."
-- **No filler**: no "worth noting", no "it's important to", no em-dash asides.
+Plain language, following ISO 24495-1.
+- **Heading: a question of 12 words or fewer**, subject first: "Should merge check every argument first?"
+- **Sentences of 20 words or fewer**, one idea each. Front-load them.
+- **Name what the person sees**: the command, the message, the file. Put IDs in `ref`.
+- **`does` is exact and complete.** It is what you will do, and it goes into the copied answer.
+- **Facts are a few words**: "Small", "Low", "Easy". Be honest when the recommended option costs more.
+- **`recWhy` is the reason**, not a restatement. No filler.
 
 ## Design
 
-The page is `assets/page.html` and `assets/app.js`. Keep it as it is. Its choices, and the sources behind them:
-- **One column for text, about 65 characters wide** (40rem). Only the comparison uses the full width of 62rem. Sources: Baymard and Bringhurst give 45–75 characters per line; WCAG 1.4.8 caps it at 80.
-- **18px body text at 1.55 line height**, in Atkinson Hyperlegible, a typeface designed for legibility. IDs and code are in JetBrains Mono.
-- **One accent color, plus a green "Recommended" color and an amber "Change" color.** Both themes are defined as tokens, and terminals stay dark in both.
-- **A thick yellow focus ring** in the GOV.UK style. Big radio rows, with keys 1–9 to pick an option.
-- **Progressive disclosure, one level deep**: a group's items open to show their details, and nothing nests further.
+- Atkinson Hyperlegible for text, JetBrains Mono for code. One accent, green for the recommendation, amber for warnings, red for permanent. Both themes are tokens.
+- Keys 1–4 pick, Enter continues. Focus is always visible. Phones stack the options.
 
 ## Sources
 
-- GOV.UK Design System, Question pages: https://design-system.service.gov.uk/patterns/question-pages
-- GOV.UK, One thing per page: https://designnotes.blog.gov.uk/2015/07/03/one-thing-per-page/
-- GOV.UK Design System, Check answers: https://design-system.service.gov.uk/patterns/check-answers
-- Nava, HealthCare.gov eligibility form case study: https://www.navapbc.com/uploads/Structuring%20a%20complex%20eligibility%20form%20for%20HealthCare.gov.pdf
-- NN/g, F-shaped pattern for reading web content: https://nngroup.com/articles/f-shaped-pattern-reading-web-content/
-- ISO 24495-1:2023 plain language; plain language checklist: https://opentextbc.ca/plbpsvpp/chapter/a-plain-language-checklist/
-- Progressive disclosure: https://ui-patterns.com/patterns/ProgressiveDisclosure
+- GOV.UK question pages: https://design-system.service.gov.uk/patterns/question-pages
+- GOV.UK, one thing per page: https://designnotes.blog.gov.uk/2015/07/03/one-thing-per-page/
+- GOV.UK check answers: https://design-system.service.gov.uk/patterns/check-answers
+- NN/g, F-shaped reading: https://nngroup.com/articles/f-shaped-pattern-reading-web-content/
+- Plain language checklist: https://opentextbc.ca/plbpsvpp/chapter/a-plain-language-checklist/
 - Baymard, line length: https://baymard.com/blog/line-length-readability

@@ -30,7 +30,16 @@ const STATES = ['ok', 'fail', 'stuck', 'now'];
 
 function checkPanel(id, which, p) {
   if (!p) { problems.push(`${id}: visual.${which} is missing`); return; }
-  if (!['terminal', 'file', 'steps'].includes(p.kind)) { problems.push(`${id}: visual.${which}.kind must be terminal, file or steps`); return; }
+  if (!['terminal', 'file', 'steps', 'numbers'].includes(p.kind)) { problems.push(`${id}: visual.${which}.kind must be terminal, file, steps or numbers`); return; }
+  if (p.kind === 'numbers') {
+    const rows = p.rows || [];
+    if (!rows.length || rows.length > 6) problems.push(`${id}: visual.${which} has ${rows.length} rows (1 to 6)`);
+    for (const r of rows) {
+      if (!r.label || r.value == null) problems.push(`${id}: visual.${which} has a row without label or value`);
+      if (r.tone && !['good', 'bad'].includes(r.tone)) problems.push(`${id}: visual.${which} row tone "${r.tone}" must be good or bad`);
+    }
+    return;
+  }
   if (p.kind === 'steps') {
     const st = p.steps || [];
     if (!st.length) problems.push(`${id}: visual.${which} has no steps`);
@@ -55,13 +64,44 @@ function checkPanel(id, which, p) {
   if (p.kind === 'file' && !p.name) problems.push(`${id}: visual.${which} file has no name`);
 }
 
+function checkOptions(id, q) {
+  const o = q.options;
+  if (!Array.isArray(o) || o.length < 2 || o.length > 4) { problems.push(`${id}: options must be a list of 2 to 4`); return; }
+  const ids = o.map((x) => x.id);
+  if (new Set(ids).size !== ids.length || ids.some((x) => !x)) problems.push(`${id}: every option needs its own id`);
+  for (const x of o) {
+    for (const k of ['name', 'does', 'src']) if (!x[k]) problems.push(`${id}: option "${x.id}" has no ${k}`);
+    if (words(x.name) > 6) warn.push(`${id}: option name "${x.name}" is over 6 words`);
+    for (const k of ['Work', 'Risk', 'Undo']) if (!x.facts?.[k]) problems.push(`${id}: option "${x.id}" has no facts.${k}`);
+    checkPanel(id, x.id, x.pic);
+  }
+  if (new Set(o.map((x) => x.pic?.kind)).size > 1) warn.push(`${id}: options use different kinds of picture; use one kind so they compare`);
+  if (q.rec && !ids.includes(q.rec)) problems.push(`${id}: rec "${q.rec}" is not one of ${ids.join(', ')}`);
+}
+
+const choicesOf = (q) => (q.options ? q.options.map((x) => x.id) : CHOICES.filter((c) => c !== 'unsure'));
+const ordered = groups.flatMap((g) => (cfg.questions || []).filter((q) => (q.group || groups[0].id) === g.id));
+for (const [i, q] of ordered.entries()) {
+  if (!q.showIf) continue;
+  const on = ordered.slice(0, i).find((x) => x.id === q.showIf.question);
+  if (!on) problems.push(`${q.id}: showIf.question "${q.showIf.question}" is not an earlier question`);
+  const list = q.showIf.is || q.showIf.not;
+  if (!Array.isArray(list) || (q.showIf.is && q.showIf.not)) problems.push(`${q.id}: showIf needs either is or not, as a list`);
+  else if (on) for (const a of list) if (!choicesOf(on).includes(a)) problems.push(`${q.id}: showIf names "${a}", which is not an answer to ${on.id}`);
+}
+for (const it of cfg.batch?.items || []) {
+  for (const k of ['id', 'name', 'today', 'after']) if (!it[k]) problems.push(`batch item "${it.id || it.name}" has no ${k}`);
+  if (it.permanent) problems.push(`batch item "${it.id}" is permanent; ask it as its own question`);
+}
+if (cfg.batch && (!cfg.batch.heading || !cfg.batch.items?.length)) problems.push('batch needs a heading and items');
+
 for (const q of cfg.questions || []) {
   const id = q.id || '(no id)';
   if (!q.id) problems.push('a question has no id');
   if (seen.has(q.id)) problems.push(`${id}: duplicate id`);
   seen.add(q.id);
   if (q.group && !gids.has(q.group)) problems.push(`${id}: group "${q.group}" is not in groups`);
-  for (const k of ['h', 'today', 'change', 'why']) if (!q[k]) problems.push(`${id}: ${k} is missing`);
+  for (const k of q.options ? ['h', 'why'] : ['h', 'today', 'change', 'why']) if (!q[k]) problems.push(`${id}: ${k} is missing`);
   if (q.h && !/\?$/.test(q.h.trim())) warn.push(`${id}: h should be a question ending in "?"`);
   if (words(q.h) > 14) warn.push(`${id}: h is ${words(q.h)} words (aim for 12 or fewer)`);
   for (const k of ['today', 'why', 'change', 'recWhy']) {
@@ -69,8 +109,9 @@ for (const q of cfg.questions || []) {
     for (const s of sentences) if (words(s) > 24) warn.push(`${id}: a sentence in ${k} has ${words(s)} words (aim for 20 or fewer)`);
     if (sentences.length > 3) warn.push(`${id}: ${k} has ${sentences.length} sentences (keep it to 1-2)`);
   }
-  if (q.rec && !CHOICES.includes(q.rec)) problems.push(`${id}: rec "${q.rec}" is not one of ${CHOICES.join(', ')}`);
   if (q.rec && !q.recWhy) warn.push(`${id}: rec has no recWhy`);
+  if (q.options) { checkOptions(id, q); continue; }
+  if (q.rec && !CHOICES.includes(q.rec)) problems.push(`${id}: rec "${q.rec}" is not one of ${CHOICES.join(', ')}`);
   if (!q.visual) problems.push(`${id}: visual is missing (every question gets a Today | Change picture)`);
   else {
     if (!q.visual.caption) warn.push(`${id}: visual.caption is missing`);
