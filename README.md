@@ -23,6 +23,22 @@ In Claude Code:
 
 A project set up with spec registers this marketplace in its `.claude/settings.json`, so a teammate who trusts the folder gets it added automatically; they still install the plugin once with `claude plugin install spec@happyface --scope project`.
 
+### Codex and GitHub Copilot CLI
+
+The same marketplace works in both:
+
+```sh
+codex plugin marketplace add happyfacedev/happyface-plugins
+codex plugin add flutter@happyface     # also spec@happyface, decide@happyface
+
+copilot plugin marketplace add happyfacedev/happyface-plugins
+copilot plugin install flutter@happyface
+```
+
+`spec` installs its skills in both, but its hooks and staged agents are built for Claude Code, so its enforcement is not supported elsewhere.
+
+Claude Code and Codex read `.claude-plugin/marketplace.json`; Copilot reads `.github/plugin/marketplace.json`, because it rejects `git-subdir` sources. Keep both in step, and use `url` rather than `github` sources in the first: Codex skips `github`.
+
 ## How updates work
 
 No plugin here sets a `version`. Claude Code then versions each plugin by its git commit, so every push to a plugin's repository is an update. Don't add a `version` to an entry or a `plugin.json`: users would stay on that version until someone bumps it.
@@ -30,8 +46,8 @@ No plugin here sets a `version`. Claude Code then versions each plugin by its gi
 ## Add a plugin
 
 1. Give the plugin a `.claude-plugin/plugin.json` with `name` and `description`, and put its skills under `skills/<skill>/SKILL.md`. Skill names are namespaced by the plugin: `<plugin>:<skill>`.
-2. Add an entry to `.claude-plugin/marketplace.json`:
-   - a plugin in its own repository: `{ "source": "github", "repo": "happyfacedev/<repo>" }`;
+2. Add an entry to `.claude-plugin/marketplace.json`, and its Copilot equivalent to `.github/plugin/marketplace.json`:
+   - a plugin in its own repository: `{ "source": "url", "url": "https://github.com/happyfacedev/<repo>.git" }`;
    - a plugin in a folder of another repository: `{ "source": "git-subdir", "url": "happyfacedev/<repo>", "path": "<folder>" }`;
    - a small plugin kept here: `"./plugins/<name>"`.
 3. Run `claude plugin validate .` and push.

@@ -1,0 +1,24 @@
+{
+  "name": "happyface",
+  "description": "happyface's plugins for GitHub Copilot: the spec workflow, Flutter conventions and decision reviews.",
+  "owner": {
+    "name": "happyface"
+  },
+  "plugins": [
+    {
+      "name": "spec",
+      "source": { "source": "github", "repo": "happyfacedev/spec", "path": "plugin" },
+      "description": "A project specification as a graph of units, with a CLI and a ticket-driven workflow."
+    },
+    {
+      "name": "flutter",
+      "source": { "source": "github", "repo": "happyfacedev/flutter-skill" },
+      "description": "Flutter conventions, core rules and pattern skills (cubits, models, networking, forms, navigation, UI, tests)."
+    },
+    {
+      "name": "decide",
+      "source": "./plugins/decide",
+      "description": "Turn several open questions into a visual review page answered one question at a time."
+    }
+  ]
+}

@@ -12,7 +12,7 @@
     },
     {
       "name": "flutter",
-      "source": { "source": "github", "repo": "happyfacedev/flutter-skill" },
+      "source": { "source": "url", "url": "https://github.com/happyfacedev/flutter-skill.git" },
       "description": "Flutter conventions, core rules and pattern skills (cubits, models, networking, forms, navigation, UI, tests)."
     },
     {
