@@ -1,0 +1,21 @@
+{
+  "title": "decide v2 Walkthrough",
+  "ask": "Walk me through this change: decide v2",
+  "frames": [
+    { "color": "blue", "key": "Size", "heading": "Seven files, and less code", "say": "It rewrites the review page and **removes more than it adds**.", "big": { "value": "−328", "label": "lines in total (+466 −794)" }, "src": "From git", "caption": "Teal added, rose removed.",
+      "pic": { "kind": "bars", "colors": ["teal", "rose"], "rows": [ { "label": "app.js", "parts": [185, 336], "note": "+185 −336" }, { "label": "page.html", "parts": [103, 186], "note": "+103 −186" }, { "label": "format.md", "parts": [51, 115], "note": "+51 −115" }, { "label": "example.json", "parts": [27, 69], "note": "+27 −69" }, { "label": "SKILL.md", "parts": [32, 49], "note": "+32 −49" }, { "label": "writing.md", "parts": [24, 36], "note": "+24 −36" }, { "label": "build.mjs", "parts": [44, 3], "note": "+44 −3" } ] } },
+    { "color": "violet", "key": "Picking", "heading": "Click the picture", "say": "Answers used to sit below the pictures. Now **the picture is the answer**.", "src": "Illustration",
+      "pic": { "kind": "flow", "steps": [ { "t": "Read the question" }, { "t": "Look at each result", "sub": "With its work, risk and undo" }, { "t": "Click the one you want", "on": true }, { "t": "Press Enter" } ] } },
+    { "color": "violet", "key": "Text", "heading": "Answers carry their meaning", "say": "The copied text makes sense **in a new chat**.", "src": "From both versions' format guides",
+      "pic": { "kind": "compare", "left": { "title": "Before", "pic": { "kind": "terminal", "lines": [ { "t": "CLI-002#Q1: keep", "tone": "hi" }, { "t": "  (rec change)", "tone": "muted" } ] } }, "right": { "title": "After", "pic": { "kind": "file", "name": "copied text", "lines": [ { "t": "CLI-002#Q1: keep", "tone": "del" }, { "t": "Should spec work through a symlink?", "tone": "add" }, { "t": "→ Keep it: You pass --root yourself.", "tone": "add" } ] } } } },
+    { "color": "orange", "key": "Safety", "heading": "It is harder to slip", "say": "Three quiet traps are gone. **Permanent choices** are the important one.", "big": { "value": "3", "label": "traps removed" }, "src": "From reading the code",
+      "pic": { "kind": "swap", "rows": [ { "from": "Accept all includes permanent choices", "to": "You always pick those yourself" }, { "from": "Old answers survive a reworded question", "to": "The question opens again" }, { "from": "Lists start ticked", "to": "Lists start empty" } ] } },
+    { "color": "teal", "key": "Scroll", "heading": "One screen per decision", "say": "A question used to be **almost two screens tall**.", "big": { "value": "1,629px", "label": "before, on a 900px window" }, "src": "Measured in a browser",
+      "pic": { "kind": "bars", "rows": [ { "label": "before", "parts": [1629], "note": "1,629px" }, { "label": "after", "parts": [813], "note": "fits 813px" } ] } },
+    { "color": "teal", "key": "Files", "heading": "Most files are text", "say": "Only three of the seven **run in the page or the build**.", "src": "From git",
+      "pic": { "kind": "grid", "columns": 4, "items": [ { "t": "app.js", "on": true }, { "t": "page.html", "on": true }, { "t": "build.mjs", "on": true }, { "t": "SKILL.md" }, { "t": "format.md" }, { "t": "writing.md" }, { "t": "example.json" } ] } },
+    { "color": "rose", "key": "Review here", "heading": "Where to look first", "say": "The checks passed, but **these can surprise people**.", "src": "From reading the code and the test run",
+      "pic": { "kind": "status", "rows": [ { "color": "rose", "tag": "Breaking", "t": "Copied answers look different", "sub": "Anything that parses the old text will break." }, { "color": "orange", "tag": "Behaviour", "t": "Answers saved in v1 are ignored", "sub": "A half-finished old review starts over." }, { "color": "violet", "tag": "Not checked", "t": "Saving answers on the page", "sub": "Not built." }, { "color": "teal", "tag": "Checked", "t": "Old decide.json files still build" } ] } }
+  ],
+  "sources": [ { "label": "commit 3b377c2", "url": "https://github.com/happyfacedev/happyface-plugins/commit/3b377c2938c76a58abc99e26a18ab003d9b1c038" } ]
+}

@@ -24,6 +24,11 @@
       "name": "visualize",
       "source": "./plugins/visualize",
       "description": "Explain a concept, a change or something the agent did as a bold visual storyboard."
+    },
+    {
+      "name": "visualize-interactive",
+      "source": "./plugins/visualize-interactive",
+      "description": "A visual storyboard you can question: click any part and a small, locked-down model answers from checked notes."
     }
   ]
 }

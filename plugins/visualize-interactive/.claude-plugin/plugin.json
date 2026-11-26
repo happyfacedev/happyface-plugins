@@ -1,0 +1,5 @@
+{
+  "name": "visualize-interactive",
+  "description": "A visual storyboard you can question: click any part and a small, locked-down model answers from checked notes.",
+  "author": { "name": "happyface" }
+}
