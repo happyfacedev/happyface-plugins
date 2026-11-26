@@ -92,12 +92,14 @@ const CHANGE = ({ el, svg, rich, draw, go, frames, brief: B, interactive }) => {
   // ---------- map ----------
   // Code names break between their words, not mid-word: AccountIdentityMark wraps as Account·Identity·Mark.
   const soft = (s) => String(s).replace(/([a-z0-9])([A-Z])/g, "$1​$2").replace(/([._/])/g, "$1​");
-  function map(M, focus) {
+  // pane.lit(id) lights one change's parts and dims the rest; pane.lit(null) shows them all again.
+  function map(M) {
     const nodes = new Map();
+    let on = null;
     const box = el("div", { class: "map", style: "--cols:" + M.layers.length },
       M.layers.map((name) => el("div", { class: "mcol" }, el("h3", { text: name }), el("div", { class: "mstack" }, M.nodes.filter((nd) => nd.layer === name).map((nd) => {
         const c = byId.get(nd.change), link = !interactive && c;
-        const e = el(link ? "button" : "div", { class: "node " + nd.state + (c ? " " + c.color : "") + (focus && nd.change !== focus ? " dim" : ""), type: link ? "button" : null, title: nd.sub || null, "data-ask": "the box \"" + nd.label + "\" in the map" + (c ? ", part of change " + c.n + ": " + c.title : "") + (nd.sub ? ". " + nd.sub : ""), onclick: link ? () => go(screen(c.id)) : null },
+        const e = el(link ? "button" : "div", { class: "node " + nd.state + (c ? " " + c.color : ""), type: link ? "button" : null, title: nd.sub || null, "data-ask": "the box \"" + nd.label + "\" in the map" + (c ? ", part of change " + c.n + ": " + c.title : "") + (nd.sub ? ". " + nd.sub : ""), onclick: link ? () => go(screen(c.id)) : null },
           badge(c, true), el("span", { text: soft(nd.label) }), nd.state === "new" ? el("small", { text: soft(nd.sub || "new") }) : nd.state === "removed" ? el("small", { text: soft(nd.sub || "removed") }) : nd.sub ? el("small", { text: soft(nd.sub) }) : null);
         nodes.set(nd.id, e);
         return e;
@@ -125,7 +127,7 @@ const CHANGE = ({ el, svg, rich, draw, go, frames, brief: B, interactive }) => {
           head = down ? `M${a.x} ${y2 + 3} l-5 -9 h10 z` : `M${a.x} ${y2 - 3} l-5 9 h10 z`;
           [mx, my] = [a.x + 8, (y1 + y2) / 2 + 4];
         }
-        const cls = (e.color ? "hue " + e.color + " " : "") + e.state + (focus && e.change !== focus ? " dim" : "");
+        const cls = (e.color ? "hue " + e.color + " " : "") + e.state + (on && e.change !== on ? " dim" : "");
         // A label goes only where the gap between the boxes can hold it; the box's own text says the rest.
         const room = la === lc ? Infinity : Math.abs(la < lc ? c.l - a.r : a.l - c.r) * (Math.abs(lc - la) === 1 ? 1 : 2.2);
         const label = e.t && room >= e.t.length * 6.6 + 10;
@@ -136,33 +138,58 @@ const CHANGE = ({ el, svg, rich, draw, go, frames, brief: B, interactive }) => {
     requestAnimationFrame(lay);
     if (document.fonts) document.fonts.ready.then(lay);
     const states = new Set(M.nodes.map((nd) => nd.state));
-    return el("div", {},
+    const pane = el("div", { class: "mapbox" },
       el("div", { class: "mapwrap" }, box),
       el("p", { class: "legend" }, ["new", "changed", "context", "removed"].filter((s) => states.has(s)).map((s) => el("span", { class: "l-" + s, text: { new: "new", changed: "changed", context: "unchanged, for context", removed: "removed" }[s] }))),
       el("p", { class: "src", text: M.src }));
+    pane.lit = (id) => { on = id; for (const nd of M.nodes) nodes.get(nd.id).classList.toggle("dim", !!on && nd.change !== on); lay(); };
+    return pane;
   }
 
   // ---------- screens ----------
+  // The overview answers one question, what the change does: the answer and four facts in the panel, the changes listed beside it.
   function overview() {
     const S = B.stats, src = B.source, checks = B.checks || [];
     const count = (s) => checks.filter((x) => x.state === s).length;
     const tally = ["passed", "failed", "skipped", "not run"].filter((s) => count(s)).map((s) => num(count(s)) + " " + s).join(" · ");
-    const tiles = B.changes.map((c) => el("article", { class: "tile " + c.color },
+    const fact = (label, ...value) => el("div", {}, el("dt", { text: label }), el("dd", {}, ...value));
+    const meta = src ? [src.head && src.base ? src.head + " → " + src.base : "", src.state, src.author ? "by " + src.author : ""].filter(Boolean).join(" · ") : "";
+    const plain = (s) => String(s).replace(/\*\*|`/g, "");
+    const rows = B.changes.map((c) => el("li", { class: "crow " + c.color, "data-ask": "change " + c.n + ", " + plain(c.title) + ". After it: " + plain(c.after) },
       badge(c),
-      el("h3", {}, el("span", { class: "k", text: KIND[c.kind] }), interactive ? el("span", { text: c.title }) : el("button", { class: "open", type: "button", onclick: () => go(screen(c.id)) }, c.title)),
-      el("div", { class: "meta" }, el("span", {}, plural(c.files.length, "file"), " ", pm(c.add, c.del)), risk(c.risk?.level), interactive ? el("button", { class: "opentile", type: "button", onclick: () => go(screen(c.id)) }, "Open ›", el("span", { class: "sr", text: " change " + c.n })) : null),
-      el("dl", { class: "ba" }, el("dt", { text: "Before" }), el("dd", {}, rich(c.before)), el("dt", { text: "After" }), el("dd", { class: "after" }, rich(c.after)))));
-    return el("section", { class: "board brief overview", id: "board" },
-      el("header", { class: "tell band" },
-        src ? el("p", { class: "srcline" }, out(src.url, {}, el("b", { text: src.label })), src.head && src.base ? " · " + src.head + " → " + src.base : "", src.state ? " · " + src.state : "", src.author ? " · by " + src.author : "") : null,
+      el("div", { class: "ct" }, el("h3", {}, interactive ? rich(c.title) : el("button", { class: "open", type: "button", onclick: () => go(screen(c.id)) }, rich(c.title))), el("p", {}, rich(c.after))),
+      el("div", { class: "meta" }, el("span", { text: KIND[c.kind] }), pm(c.add, c.del), c.risk && c.risk.level !== "low" ? risk(c.risk.level) : null),
+      interactive ? el("button", { class: "chev", type: "button", title: "Open change " + c.n, onclick: () => go(screen(c.id)) }, "›", el("span", { class: "sr", text: "Open change " + c.n })) : el("span", { class: "chev", "aria-hidden": "true", text: "›" })));
+    return el("section", { class: "board brief ovw", id: "board" },
+      el("div", { class: "tell" },
+        src ? el("p", { class: "srcline" }, out(src.url, {}, el("b", { text: src.label })), meta ? el("span", { text: meta }) : null) : null,
         el("h1", {}, rich(B.answer)),
-        el("ul", { class: "stats", "aria-label": "Size and checks" },
-          el("li", {}, pm(S.add, S.del)), el("li", { text: plural(S.files, "file") }), el("li", { text: plural(B.changes.length, "change") }),
-          el("li", { class: count("failed") ? "bad" : null, text: checks.length ? "Checks: " + tally : "No checks recorded" }),
-          B.risk ? el("li", {}, risk(B.risk)) : null, B.effort ? el("li", { text: "Review: " + B.effort }) : null)),
-      el("div", { class: "show" }, el("div", { class: "ov" + (B.map ? "" : " solo") },
-        el("section", { class: "sect" }, el("h2", { text: "What changes, in reading order" }), el("div", { class: "tiles" }, tiles)),
-        B.map ? el("section", { class: "sect" }, el("h2", { text: "Where it lands" }), map(B.map, null)) : null)));
+        el("dl", { class: "sum" },
+          fact("Size", pm(S.add, S.del), " in " + plural(S.files, "file")),
+          fact("Checks", checks.length ? el("span", { class: count("failed") ? "bad" : null, text: tally }) : "None recorded"),
+          B.risk ? fact("Risk", B.risk[0].toUpperCase() + B.risk.slice(1)) : null,
+          B.effort ? fact("Review", B.effort) : null)),
+      el("div", { class: "show" },
+        el("h2", { text: plural(B.changes.length, "change") + ", in reading order" }),
+        el("ol", { class: "clist" }, rows),
+        el("p", { class: "src", text: interactive ? "Click a change to ask about it; › opens its code." : "Open a change to see its code." })));
+  }
+
+  // The map has a screen of its own; its legend lights up one change's parts.
+  function where(f) {
+    const M = B.map, pane = map(M), n = (s) => M.nodes.filter((nd) => nd.state === s).length;
+    const parts = [["changed", n("changed")], ["new", n("new")], ["removed", n("removed")], ["shown for context", n("context")]].filter(([, k]) => k).map(([s, k]) => num(k) + " " + s).join(", ");
+    const lit = (id) => () => pane.lit(id);
+    const touched = B.changes.filter((c) => M.nodes.some((nd) => nd.change === c.id) || M.edges.some((e) => e.change === c.id));
+    return el("section", { class: "board brief mapscreen", id: "board" },
+      el("div", { class: "tell" },
+        el("span", { class: "no", text: "Map" }),
+        el("h1", { text: f.heading }),
+        el("p", { text: plural(M.nodes.length, "part") + " of the code: " + parts + "." }),
+        el("ul", { class: "mlegend", "aria-label": "Changes on the map" }, touched.map((c) => el("li", { onmouseenter: lit(c.id), onmouseleave: lit(null) },
+          badge(c, true), interactive ? el("span", {}, rich(c.title)) : el("button", { type: "button", onclick: () => go(screen(c.id)), onfocus: lit(c.id), onblur: lit(null) }, rich(c.title))))),
+        el("p", { class: "hint", text: "Point at a change to light up its parts." })),
+      el("div", { class: "show" }, pane));
   }
 
   // The shortest end of each path that no other path in the list shares: page.html twice becomes decide/assets/page.html.
@@ -224,5 +251,5 @@ const CHANGE = ({ el, svg, rich, draw, go, frames, brief: B, interactive }) => {
       }), el("p", { class: "src", text: "Counted from the diff. A file in two changes shows the other change's number." })));
   }
 
-  return { overview, change, review, files };
+  return { overview, map: where, change, review, files };
 };

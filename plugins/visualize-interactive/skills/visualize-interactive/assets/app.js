@@ -90,7 +90,7 @@
 
   // ---------- storyboard ----------
   const SPOTS = ".tell h1, .tell p, .tell .big, .grid > span, .bars > div, .flow > li, .swap > div, .fact, .ln, .pair h2, .fname, .cap, .show svg:not(.wires) [data-ask], .show svg:not(.wires) text:not(.tick)"
-    + ", .stats li, .tile, .node, .ba2 > div, .flist li, .code figcaption, .cnote, .cl:not(.gap), .firsts li, .riskrow, .chk, .unchk li, .frow";
+    + ", .sum > div, .crow, .mlegend li, .node, .ba2 > div, .flist li, .code figcaption, .cnote, .cl:not(.gap), .firsts li, .riskrow, .chk, .unchk li, .frow";
   const spots = () => [...view.querySelectorAll(SPOTS)], charts = () => [...view.querySelectorAll(".show svg")].filter((g) => g.nearest);
   // After an edit to the step, a pin goes to the part with the same words, else to the step's corner.
   function settle(t) {

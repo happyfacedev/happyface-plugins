@@ -1,6 +1,6 @@
 # change.json: the change brief format
 
-A change brief explains a code change: a pull request, a commit, a branch or uncommitted work. The page has an overview of every change, one screen per change with its real code, a review screen and every file. `example-change.json` with `example-change.diff` uses every part.
+A change brief explains a code change: a pull request, a commit, a branch or uncommitted work. The page opens with an overview: what the change does, four facts, and its changes in reading order, one line each. Then come the map of where they land, one screen per change with its real code, a review screen and every file. `example-change.json` with `example-change.diff` uses every part.
 
 `node scripts/change.mjs change.diff` lists every file with its counts and the line ranges of its hunks. The command in SKILL.md then checks the brief against the diff, given with `--diff change.diff`, and builds the page.
 
@@ -69,6 +69,7 @@ Every file in the diff must be in a change or match `others`, or the build fails
   "edges": [ { "from": "composer", "to": "check", "change": "images", "t": "asks" } ] }
 ```
 
+- The map has its own screen after the overview. Its legend lists the changes; pointing at one lights up its parts.
 - Layers run left to right in the direction calls or data flow: up to 5 layers, 5 nodes each, 16 nodes and 24 edges in all.
 - A node with a `change` takes its color and number. A node without one is unchanged context and is drawn dashed: add the callers and callees a reviewer needs to see what the change touches.
 - Node `state`: `new`, `changed`, `removed` or `context`. Default: `changed` with a change, `context` without. Edge `state`: `new`, `removed` or `same`.

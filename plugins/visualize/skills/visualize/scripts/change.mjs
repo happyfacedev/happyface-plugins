@@ -232,6 +232,7 @@ export function compile(cfg, { diff, errors, warnings, picture }) {
   const brief = { source: cfg.source || null, answer: cfg.answer, stats, risk: level, effort: cfg.effort || null, checks, changes, map, review: { heading: R.heading || null, say: R.say || null, first, risks, unchecked }, files, sources: Array.isArray(cfg.sources) ? cfg.sources : [] };
   const frames = [
     { layout: 'overview', key: 'Overview', heading: cfg.answer, say: '', color: 'ink' },
+    ...(map ? [{ layout: 'map', key: 'Map', heading: 'Where it lands', say: '', color: 'ink' }] : []),
     ...changes.map((c) => ({ layout: 'change', ref: c.id, key: c.key, heading: c.title, say: c.what, color: c.color })),
     { layout: 'review', key: 'Review', heading: R.heading || 'Where to look first', say: R.say || '', color: 'rose' },
     { layout: 'files', key: 'Files', heading: `All ${stats.files} files`, say: '', color: 'teal' },

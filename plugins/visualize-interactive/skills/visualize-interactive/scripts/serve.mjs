@@ -53,7 +53,7 @@ const size = isBrief ? `${cfg.change.changes.length} changes, ${cfg.change.stats
 if (opt.check) { console.log(`ok: ${size}, ${c.warnings.length} warning(s), background ${background.length.toLocaleString('en')} characters`); process.exit(0); }
 
 // A screen of a brief is identified by what it shows, so a pin stays exact only while that content is unchanged.
-const B = cfg.change, shownBy = (f) => (f.layout === 'change' ? B.changes.find((x) => x.id === f.ref) : f.layout === 'review' ? [B.review, B.checks] : f.layout === 'files' ? B.files : [B.answer, B.stats, B.changes.map((x) => [x.title, x.before, x.after]), B.map]);
+const B = cfg.change, shownBy = (f) => (f.layout === 'change' ? B.changes.find((x) => x.id === f.ref) : f.layout === 'review' ? [B.review, B.checks] : f.layout === 'files' ? B.files : f.layout === 'map' ? B.map : [B.answer, B.source, B.stats, B.checks, B.risk, B.effort, B.changes.map((x) => [x.title, x.after, x.kind, x.risk])]);
 const commentsPath = resolve(opt.comments || input.replace(/\.json$/i, '') + '.comments.json'), stepIds = ids(isBrief ? cfg.frames.map((f) => ({ ...f, content: shownBy(f) })) : cfg.frames, custom);
 let comments;
 try { comments = store(commentsPath); } catch (e) { die(`error: ${e.message}`); }
