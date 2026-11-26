@@ -5,6 +5,7 @@ One JSON file describes one review. `scripts/build.mjs` checks it and writes one
 | Key | Required | What it is |
 | --- | --- | --- |
 | `title` | yes | Tab and gallery name: "Pricing Decisions". |
+| `about` | no | What the review is about: the change, where it lives and what happens now. See ABOUT. |
 | `intro` | no | One or two sentences above the first question. |
 | `questions` | yes | See QUESTION. Shown in this order, within their groups. |
 | `batch` | no | Small safe changes accepted on one screen. |
@@ -45,10 +46,33 @@ A review of one question, with no group review, batch or extras, has no summary 
 | `options` | yes | 2–4. Each needs `id`, `name`, `does`, `src`, `pic` and `facts` with `Work`, `Risk`, `Undo`. |
 | `options[].permanent` | no | `true` when it cannot be undone. It is marked, and "Accept all recommendations" leaves it out. |
 | `rec`, `recWhy` | no | An option id, and the reason in one sentence. |
+| `context` | no | What this question is about: `{ now, where, pic, src }`. See ABOUT. |
 | `showIf` | no | `{ "question": "<earlier id>", "is": ["a"] }` or `"not": ["a"]`. Otherwise the question is skipped. |
 | `group`, `ref` | no | A `groups[].id`; a small source line. |
 
 "Not sure" and "Add a note" are always there.
+
+## ABOUT
+
+What a review, or one question, is about: the change it belongs to, where that lives in the code, and what happens now.
+
+```json
+"about": { "what": "Get spec ready to install on a new machine.", "why": "Both came up while installing spec on a fresh laptop.",
+  "where": [ { "at": "cli/root.mjs:12", "t": "specRoot() finds the spec folder" } ],
+  "pic": { "kind": "terminal", "lines": [ { "t": "~/bin/spec lint", "tone": "cmd" }, { "t": "no spec root", "tone": "hi" } ], "exit": 2 }, "src": "From a real run" }
+"context": { "now": "spec looks for its folder next to the file you ran.", "where": ["cli/root.mjs:12"],
+  "pic": { "kind": "file", "name": "cli/root.mjs", "lines": [ … ] }, "src": "From reading the code" }
+```
+
+| Key | Rule |
+| --- | --- |
+| `about.what` | The change the decisions belong to, one sentence of 20 words or fewer. Required in `about`. |
+| `about.why` | Why it comes up now, one sentence. |
+| `where` | Up to 6 places, each `"path:line"` or `{ "at": "path:line", "t": "what lives there" }`. |
+| `context.now` | What happens today, one sentence of 20 words or fewer. |
+| `pic`, `src` | A real picture of today: the code, a run or numbers. In `about` it shows beside `where`; in `context` it waits behind "Show the code", so the screen still fits. `src` says where it comes from. |
+
+With two or more screens, `about` opens the review with every decision ahead listed. A review of one question shows `about.what` as its intro and the rest as that question's context.
 
 ## Pictures
 
@@ -58,8 +82,9 @@ Use one kind across a question's options.
 - **file**: `{ kind, name, lines }`. Tones: `out`, `muted`, `hi`, `add`, `del`. The page adds + and −.
 - **steps**: `{ kind, steps: [{ label, state, who }], note }`. States: `ok`, `fail`, `stuck`, `now`. `who` is optional.
 - **numbers**: `{ kind, rows: [{ label, value, tone }] }`. Tone: `good` or `bad`, or none.
+- **diff**: `{ kind, file, lines: [{ t, tone, n }] }`. Tones: `add`, `del`, `ctx` (default). `n` is the line number. A removed line followed by its replacement marks only the part that differs. Use it when the options are code: each shows the lines it would write.
 
-Limits: 8 lines, 6 steps or 6 rows, and 3 `hi` lines.
+Limits: 8 lines (10 in a diff), 6 steps or 6 rows, and 3 `hi` lines.
 
 ## Batch, extras and group review
 
@@ -76,6 +101,8 @@ Batch items start ticked, and count only once the person presses Accept. An unti
 ## The older question shape
 
 Questions with `today`, `change` and `visual: { today, after }` instead of `options` still build. They become Keep, Change and Docs options without facts. Prefer `options`.
+
+The summary screen shows what each chosen option does, so the person approves the whole change at once.
 
 ## The copied answers
 

@@ -46,6 +46,9 @@ svg text { font-family: var(--f); fill: var(--ink); } .ax { stroke: var(--muted)
 .file { background: var(--card); } .fname { background: var(--h); color: var(--white); padding: 0.35rem 0.75rem; overflow-wrap: anywhere; } .file .body { padding: 0.45rem; } .file .muted { color: var(--muted); } .file .hi { background: var(--hi-bg); } .file .add { background: var(--add-bg); color: var(--add); } .file .del { background: var(--del-bg); color: var(--del); }
 @media (max-width: 52rem) and (max-aspect-ratio: 6/5) { html { font-size: 100%; } .board { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(44%) minmax(0, 1fr); } .tell { padding: 0.9rem 1.1rem; } .tell h1 { font-size: 1.5em; } .tell p { font-size: 1em; } .big { margin-top: 0; padding-top: 0.5em; } .big b { font-size: 2em; } .show { padding: 0.9rem; } .steps { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: auto 2.9rem; gap: 0.5rem 0.7rem; height: auto; } .steps .nav { grid-column: 1 / -1; grid-row: 1; } .nav button { font-size: 0; min-height: 1.5rem; } .pair { grid-template-columns: minmax(0, 1fr); } .bars > div { grid-template-columns: 6.2rem minmax(0, 1fr) 5.4rem; gap: 0.5rem; font-size: 0.75rem; } .fact { grid-template-columns: 6rem minmax(0, 1fr); gap: 0.7rem; } .grid { gap: 3px; } .grid span { font-size: 0.8125rem; min-height: 1.9rem; } }
 </style>
+<style>
+__CHANGECSS__
+</style>
 <div class="app">
   <div class="askline"><p class="ask" id="ask"></p><button class="theme" id="theme" type="button"></button></div>
   <main id="view" tabindex="-1"></main>
@@ -73,6 +76,9 @@ const PICS = {};
 </script>
 <script>
 __CUSTOM__
+</script>
+<script>
+__CHANGE__
 </script>
 <script>
 __APP__

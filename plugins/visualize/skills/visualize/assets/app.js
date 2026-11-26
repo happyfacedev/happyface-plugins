@@ -42,13 +42,15 @@
     custom: (p) => PICS[p.id]({ el, svg, chart, state: (state[p.id] ??= {}), rerender: (id) => { render(); if (id && $(id)) $(id).focus({ preventScroll: true }); } }),
   };
   function draw(p) { try { return KINDS[p.kind](p); } catch (e) { return el("p", { class: "cap", role: "alert", text: "This picture failed to draw: " + e.message }); } }
+  // A change brief: its screens are drawn by change.js, the navigation stays the storyboard's.
+  const LAYOUT = C.change && typeof CHANGE === "function" ? CHANGE({ el, svg, rich, draw, go: (i) => go(i), frames: F, brief: C.change, interactive: false }) : null;
 
   function go(i) { at = Math.max(0, Math.min(F.length - 1, i)); render(); window.scrollTo(0, 0); $("fwd").focus({ preventScroll: true }); }
   function render() {
     const f = F[at], last = at === F.length - 1;
     document.title = C.title;
     view.replaceChildren(
-      el("section", { class: "board " + f.color },
+      f.layout && LAYOUT ? LAYOUT[f.layout](f) : el("section", { class: "board " + f.color },
         el("div", { class: "tell" }, el("span", { class: "no", text: "Step " + (at + 1) + " of " + F.length }), el("h1", { text: f.heading }), el("p", {}, rich(f.say)), f.big ? el("div", { class: "big" }, el("b", { text: f.big.value }), el("span", { text: f.big.label })) : null),
         el("div", { class: "show" }, el("div", { class: "fit" }, draw(f.pic)), f.caption ? el("p", { class: "cap", text: f.caption }) : null, el("p", { class: "src" }, f.src, last && (C.sources || []).length ? [". Sources: ", C.sources.map((s, i) => [i ? ", " : "", el("a", { href: s.url, target: "_blank", rel: "noopener", text: s.label })])] : null))),
       el("div", { class: "steps" }, el("button", { class: "ghost", type: "button", disabled: !at, onclick: () => go(at - 1) }, "‹ Back"),
@@ -63,6 +65,8 @@
     const largest = (lo, hi, set, over) => { set(hi); if (!over()) return; for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; set(mid); if (over()) hi = mid; else lo = mid; } set(lo); };
     const spills = (n) => n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1;
     const small = innerWidth < 640 ? 0.78 : 0.6;
+    // A change brief's panes scroll instead of shrinking: code must stay readable. Only its color panel is fitted.
+    if (view.querySelector(".brief")) { if (!tell.classList.contains("band")) largest(small, 1.05, (v) => tell.style.setProperty("--s", v), () => spills(tell)); return; }
     largest(small, 1.1, (v) => tell.style.setProperty("--s", v), () => spills(tell));
     // A picture that is one drawing fills the space by itself; anything else is zoomed.
     const art = box.querySelectorAll("svg");

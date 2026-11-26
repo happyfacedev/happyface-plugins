@@ -8,6 +8,17 @@
 - **Always allow "Not sure".** End with a summary where any answer can be changed.
 - **Ask less.** Decide what you can, batch what is safe, skip what an earlier answer settles.
 
+## What the change is about
+
+A choice makes sense only once the person knows what it changes. Answer that before the options, in this order:
+
+- **The change**: `about.what` names the feature or fix the decisions belong to, and `why` says why it comes up now.
+- **The place**: `where` gives `path:line` and what lives there, so the person who knows the code sees the spot, and the one who doesn't learns it.
+- **Today**: `context.now` says in one sentence what happens now. Its real code or output waits behind "Show the code".
+- **The code each option writes**: when options change code, show each as a `diff` of the lines it would write, with line numbers, and call it a proposed change.
+
+The summary repeats what each chosen option will do, so the person approves the whole change, not a list of names.
+
 ## Pictures
 
 - **What happens now is real.** Copy it from a run, the code or a test. Say which in `src`.
@@ -26,7 +37,7 @@ Plain language, following ISO 24495-1.
 
 ## Design
 
-- Atkinson Hyperlegible for text, JetBrains Mono for code. Each question has its own color (blue, violet or orange). Teal always means recommended or done, rose always means permanent. The skin is shared with visualize. Both themes are tokens.
+- Atkinson Hyperlegible for text, JetBrains Mono for code, without ligatures, so `!=` never becomes one glyph. Each question has its own color (blue, violet or orange). The about screen uses the dark band of visualize's change brief. Teal always means recommended or done, rose always means permanent. The skin is shared with visualize. Both themes are tokens.
 - Keys 1–4 pick, Enter continues. Focus is always visible. Phones stack the options.
 
 ## Sources

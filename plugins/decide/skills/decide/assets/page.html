@@ -109,6 +109,26 @@ pre { background: var(--card); border-radius: 8px; padding: 0.8rem; font: 0.8125
 .status { color: var(--teal-i); font-weight: 700; margin: 0.6rem 0 0; } .status:empty { margin: 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; }
 
+/* What a decision is about: the change it belongs to, where it lives in the code, and what happens now. */
+:root { --band: #0b1220; --add-hi: #a6e1d6; --del-hi: #f5c0d3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --band: #1a2230; --add-hi: #17675c; --del-hi: #6e2445; } }
+:root[data-theme="dark"] { --band: #1a2230; --add-hi: #17675c; --del-hi: #6e2445; }
+.ink { --h: var(--band); --t: var(--sunk); --i: var(--ink); }
+.qctx { margin: 0.8rem 0 0; display: grid; gap: 0.45rem; max-width: 76ch; }
+.qctx .now { margin: 0; } .lab { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; margin-right: 0.55rem; }
+.loc { display: flex; flex-wrap: wrap; gap: 0.35rem 0.45rem; list-style: none; margin: 0; padding: 0; align-items: center; } .loc li { background: color-mix(in srgb, var(--white) 17%, transparent); border-radius: 6px; padding: 0.1rem 0.5rem; font-size: 0.9375rem; } .loc li.lab { background: none; padding: 0; font-size: 0.75rem; } .loc code, .wlist code { font: 0.8125rem var(--m); font-variant-ligatures: none; }
+.qctx details > summary { cursor: pointer; width: fit-content; font-size: 0.9375rem; text-decoration: underline; text-underline-offset: 0.2em; } .qctx details[open] > summary { margin-bottom: 0.5rem; } .qctx details .src { color: inherit; opacity: 0.85; }
+.file, .diff { color: var(--ink); }
+.about { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); gap: 1rem; } .about > section, .ahead { background: var(--card); border-radius: 12px; padding: 0.9rem 1rem; min-width: 0; }
+.about h2, .ahead h2 { margin: 0 0 0.55rem; font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.wlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; } .wlist li { display: grid; gap: 0.05rem; } .wlist code { color: var(--blue-i); overflow-wrap: anywhere; } .wlist span { color: var(--muted); font-size: 0.9375rem; }
+.ahead { margin-top: 1rem; } .ahead ol { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.45rem; } .ahead li b { display: block; } .ahead li span { color: var(--muted); font-size: 0.9375rem; } .ahead .more { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.9375rem; }
+.row .d { grid-column: 1; color: var(--ink); font-size: 0.9375rem; }
+/* A code change, with line numbers; only the part of a line that differs is marked. */
+.diff { border: 1px solid var(--line); background: var(--card); border-radius: 8px; overflow: hidden; font: 0.8125rem/1.55 var(--m); font-variant-ligatures: none; }
+.diff .body { padding: 0.25rem 0; } .dl { display: grid; grid-template-columns: 2.6em 1.3em minmax(0, 1fr); } .dl > span { text-align: right; color: var(--muted); padding-right: 0.45em; user-select: none; font-variant-numeric: tabular-nums; } .dl > .sg { text-align: center; padding: 0; } .dl > code { font: inherit; font-variant-ligatures: none; white-space: pre-wrap; overflow-wrap: anywhere; padding-right: 0.5em; }
+.dl.add { background: var(--add-bg); } .dl.add > .sg { color: var(--add); } .dl.del { background: var(--del-bg); } .dl.del > .sg { color: var(--del); } .dl mark { background: var(--add-hi); color: inherit; border-radius: 2px; } .dl.del mark { background: var(--del-hi); }
+
 @media (max-width: 46rem) {
   .options { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 0.9rem; } .opt { grid-row: auto; grid-template-rows: none; }
   .check.two { grid-template-columns: 1.6rem minmax(0, 1fr); } .check .after { grid-column: 2; } .kbd { display: none; }

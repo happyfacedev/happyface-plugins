@@ -1,5 +1,5 @@
 {
   "name": "visualize-interactive",
-  "description": "A visual storyboard you can question: click any part and a small, locked-down model answers from checked notes.",
+  "description": "A storyboard or change brief you can question: click any part, a line of code included, and a small, locked-down model answers from checked notes.",
   "author": { "name": "happyface" }
 }

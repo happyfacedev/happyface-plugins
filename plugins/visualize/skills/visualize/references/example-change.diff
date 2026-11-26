@@ -1,0 +1,97 @@
+diff --git a/plugins/decide/skills/decide/assets/page.html b/plugins/decide/skills/decide/assets/page.html
+index e17e1d4..77780fb 100644
+--- a/plugins/decide/skills/decide/assets/page.html
++++ b/plugins/decide/skills/decide/assets/page.html
+@@ -34,6 +34,7 @@ button, textarea { font: inherit; color: inherit; }
+ .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+ 
+ .top { display: flex; align-items: center; gap: 1.1rem; min-height: 3.1rem; }
++.theme { flex: none; width: 2.1rem; height: 2.1rem; padding: 0; border: 2px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; } .theme:hover { border-color: var(--muted); } .theme svg { width: 1.1rem; height: 1.1rem; display: block; }
+ .where { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .bar { flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.35rem; min-width: 0; }
+ .bar i { height: 8px; border-radius: 4px; background: var(--t); border: 1px solid var(--i); } .bar .seen { background: var(--h); border-color: var(--h); }
+@@ -116,11 +117,28 @@ pre { background: var(--card); border-radius: 8px; padding: 0.8rem; font: 0.8125
+ </style>
+ 
+ <div class="app blue" id="app">
+-  <div class="top"><button class="link" id="back" type="button">‹ Back</button><span class="bar" id="bar" aria-hidden="true"></span><span class="where" id="where"></span></div>
++  <div class="top"><button class="link" id="back" type="button">‹ Back</button><span class="bar" id="bar" aria-hidden="true"></span><span class="where" id="where"></span><button class="theme" id="theme" type="button"></button></div>
+   <main id="view" tabindex="-1"></main>
+   <div class="foot" id="foot"></div>
+ </div>
+ 
++<script>
++// Light or dark follows the system (or the host page) until the button overrides it; switching back to match follows again.
++(() => {
++  const root = document.documentElement, host = root.getAttribute("data-theme"), dark = matchMedia("(prefers-color-scheme: dark)"), KEY = "happyface-theme", b = document.getElementById("theme");
++  const base = () => host || (dark.matches ? "dark" : "light"), now = () => root.getAttribute("data-theme") || base();
++  const paint = () => { const to = now() === "dark" ? "light" : "dark"; b.setAttribute("aria-label", "Switch to " + to + " mode"); b.title = "Switch to " + to + " mode"; b.innerHTML = to === "light" ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.7 8.7 0 1 0 10.7 10.7z"/></svg>'; };
++  try { const t = localStorage.getItem(KEY); if (t === "light" || t === "dark") root.setAttribute("data-theme", t); } catch (e) {}
++  b.addEventListener("click", () => {
++    const to = now() === "dark" ? "light" : "dark", follow = to === base();
++    if (!follow) root.setAttribute("data-theme", to); else if (host) root.setAttribute("data-theme", host); else root.removeAttribute("data-theme");
++    try { if (follow) localStorage.removeItem(KEY); else localStorage.setItem(KEY, to); } catch (e) {}
++    paint();
++  });
++  dark.addEventListener("change", paint);
++  paint();
++})();
++</script>
+ <script>
+ const CONFIG = __CONFIG__;
+ </script>
+diff --git a/plugins/decide/skills/decide/scripts/build.mjs b/plugins/decide/skills/decide/scripts/build.mjs
+index 486ee78..2f013e0 100644
+--- a/plugins/decide/skills/decide/scripts/build.mjs
++++ b/plugins/decide/skills/decide/scripts/build.mjs
+@@ -137,7 +137,7 @@ const html = readFileSync(join(here, '..', 'assets', 'page.html'), 'utf8').repla
+ writeFileSync(out, html);
+ 
+ const probe = join(tmpdir(), `decide-check-${process.pid}.js`);
+-writeFileSync(probe, html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>')).replace('</script>\n<script>', '\n'));
++writeFileSync(probe, html.slice(html.indexOf('<script>') + 8, html.lastIndexOf('</script>')).replaceAll('</script>\n<script>', '\n'));
+ const r = spawnSync(process.execPath, ['--check', probe], { encoding: 'utf8' });
+ if (r.status !== 0) { console.error(r.stderr); process.exit(1); }
+ console.log(`wrote ${out}: ${cfg.questions.length} questions, ${groups.filter((g) => g.review).length} group reviews${cfg.extras?.items?.length ? ', ' + cfg.extras.items.length + ' extras' : ''}, ${warn.length} warning(s)`);
+diff --git a/plugins/visualize/skills/visualize/assets/page.html b/plugins/visualize/skills/visualize/assets/page.html
+index 27a565a..79d583b 100644
+--- a/plugins/visualize/skills/visualize/assets/page.html
++++ b/plugins/visualize/skills/visualize/assets/page.html
+@@ -25,6 +25,8 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.45 var(
+ :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; } main:focus { outline: none; }
+ .app { height: 100%; max-width: 80rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0.8rem; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.7rem; }
+ .ask { font-weight: 700; font-size: 1.0625rem; margin: 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ask span { color: var(--muted); font-weight: 400; }
++.askline { display: flex; align-items: center; gap: 1rem; min-width: 0; } .askline .ask { flex: 1; }
++.theme { flex: none; width: 2.1rem; height: 2.1rem; padding: 0; border: 2px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink); display: grid; place-items: center; cursor: pointer; } .theme:hover { border-color: var(--muted); } .theme svg { width: 1.1rem; height: 1.1rem; display: block; }
+ main { min-height: 0; min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 0.8rem; }
+ .board { display: grid; grid-template-columns: min(21rem, 36%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; border-radius: 16px; overflow: hidden; background: var(--t); }
+ .tell { background: var(--h); color: var(--white); padding: 1.6rem 1.6rem 1.4rem; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; font-size: calc(1rem * var(--s, 1)); } .tell > * { flex: none; } .tell .no { font-weight: 700; } .tell h1 { font-size: 1.95em; line-height: 1.15; margin: 0.2em 0 0.4em; text-wrap: balance; overflow-wrap: break-word; } .tell p { margin: 0; font-size: 1.125em; overflow-wrap: break-word; } .tell mark { background: var(--white); color: var(--h); border-radius: 4px; padding: 0 0.25em; font-weight: 700; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+@@ -45,10 +47,27 @@ svg text { font-family: var(--f); fill: var(--ink); } .ax { stroke: var(--muted)
+ @media (max-width: 52rem) and (max-aspect-ratio: 6/5) { html { font-size: 100%; } .board { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(44%) minmax(0, 1fr); } .tell { padding: 0.9rem 1.1rem; } .tell h1 { font-size: 1.5em; } .tell p { font-size: 1em; } .big { margin-top: 0; padding-top: 0.5em; } .big b { font-size: 2em; } .show { padding: 0.9rem; } .steps { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: auto 2.9rem; gap: 0.5rem 0.7rem; height: auto; } .steps .nav { grid-column: 1 / -1; grid-row: 1; } .nav button { font-size: 0; min-height: 1.5rem; } .pair { grid-template-columns: minmax(0, 1fr); } .bars > div { grid-template-columns: 6.2rem minmax(0, 1fr) 5.4rem; gap: 0.5rem; font-size: 0.75rem; } .fact { grid-template-columns: 6rem minmax(0, 1fr); gap: 0.7rem; } .grid { gap: 3px; } .grid span { font-size: 0.8125rem; min-height: 1.9rem; } }
+ </style>
+ <div class="app">
+-  <p class="ask" id="ask"></p>
++  <div class="askline"><p class="ask" id="ask"></p><button class="theme" id="theme" type="button"></button></div>
+   <main id="view" tabindex="-1"></main>
+ </div>
+ <script>
++// Light or dark follows the system (or the host page) until the button overrides it; switching back to match follows again.
++(() => {
++  const root = document.documentElement, host = root.getAttribute("data-theme"), dark = matchMedia("(prefers-color-scheme: dark)"), KEY = "happyface-theme", b = document.getElementById("theme");
++  const base = () => host || (dark.matches ? "dark" : "light"), now = () => root.getAttribute("data-theme") || base();
++  const paint = () => { const to = now() === "dark" ? "light" : "dark"; b.setAttribute("aria-label", "Switch to " + to + " mode"); b.title = "Switch to " + to + " mode"; b.innerHTML = to === "light" ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.7 8.7 0 1 0 10.7 10.7z"/></svg>'; };
++  try { const t = localStorage.getItem(KEY); if (t === "light" || t === "dark") root.setAttribute("data-theme", t); } catch (e) {}
++  b.addEventListener("click", () => {
++    const to = now() === "dark" ? "light" : "dark", follow = to === base();
++    if (!follow) root.setAttribute("data-theme", to); else if (host) root.setAttribute("data-theme", host); else root.removeAttribute("data-theme");
++    try { if (follow) localStorage.removeItem(KEY); else localStorage.setItem(KEY, to); } catch (e) {}
++    paint();
++  });
++  dark.addEventListener("change", paint);
++  paint();
++})();
++</script>
++<script>
+ const CONFIG = __CONFIG__;
+ const PICS = {};
+ </script>

@@ -57,5 +57,5 @@ export function checker(custom = '') {
     if (String(f.big?.value ?? '').length > 10) warnings.push(`${at}: big.value is over 10 characters`);
     picture(at, f.pic);
   }
-  return { errors, warnings, need, frame };
+  return { errors, warnings, need, frame, picture };
 }

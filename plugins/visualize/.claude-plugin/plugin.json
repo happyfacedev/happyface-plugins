@@ -1,5 +1,5 @@
 {
   "name": "visualize",
-  "description": "Explain a concept, a change or something the agent did as a bold visual storyboard, one idea per step.",
+  "description": "Explain a concept as a bold visual storyboard, or a code change as a brief: what it does, its real code, where to look and every file.",
   "author": { "name": "happyface" }
 }

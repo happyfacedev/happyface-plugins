@@ -23,13 +23,17 @@
   const verdicts = (r) => (r.options || [["approve", "Yes, approve it", "Everything in it counts as confirmed."], ["look", "Mostly, read parts with me first", "Name them in a note."], ["hold", "Not yet", "It stays as it is for now."]]).map(([id, name, does]) => ({ id, name, does }));
   const STEPS = [];
   for (const g of groups) {
-    for (const q of (C.questions || []).filter((x) => (x.group || groups[0].id) === g.id)) STEPS.push({ kind: "q", id: q.id, g, h: q.h, why: q.why, rec: q.rec, recWhy: q.recWhy, ref: q.ref, caption: (q.visual || {}).caption, showIf: q.showIf, options: toOptions(q) });
+    for (const q of (C.questions || []).filter((x) => (x.group || groups[0].id) === g.id)) STEPS.push({ kind: "q", id: q.id, g, h: q.h, why: q.why, rec: q.rec, recWhy: q.recWhy, ref: q.ref, caption: (q.visual || {}).caption, showIf: q.showIf, context: q.context, options: toOptions(q) });
     if (g.review) STEPS.push({ kind: "q", id: "group:" + g.id, g, h: g.review.heading || "Is " + (g.label || g.id) + " right?", why: [g.summary, g.review.intro].filter(Boolean).join(" "), options: verdicts(g.review), items: g.review.items });
   }
   if (C.batch) STEPS.push({ kind: "batch", id: "batch", h: C.batch.heading, why: C.batch.why, items: C.batch.items });
   if (C.extras && (C.extras.items || []).length) STEPS.push({ kind: "extras", id: "extras", h: C.extras.heading, why: C.extras.intro, items: C.extras.items });
   const single = STEPS.length === 1 && STEPS[0].kind === "q";
   if (!single) STEPS.push({ kind: "end", id: "end", h: "Check your answers" });
+  // What the review is about opens it; a single question shows it inside its own screen instead.
+  const A = C.about || null;
+  if (A && !single) STEPS.unshift({ kind: "about", id: "about", h: A.what, why: A.why || "" });
+  const counted = (list) => list.filter((x) => x.kind !== "end" && x.kind !== "about");
 
   // ---------- state ----------
   const KEY = C.storageKey || "decide-" + String(C.title || "review").toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -65,7 +69,7 @@
   };
   const dom = (s) => "s" + STEPS.indexOf(s);
   // Teal means recommended or done and rose means permanent, so questions take turns with the other three.
-  const hue = (s) => (s.kind === "end" ? "teal" : ["blue", "violet", "orange"][STEPS.indexOf(s) % 3]);
+  const hue = (s) => (s.kind === "end" ? "teal" : s.kind === "about" ? "ink" : ["blue", "violet", "orange"][counted(STEPS).indexOf(s) % 3]);
   const board = (s, tell, ...body) => view.append(el("section", { class: "board" }, el("div", { class: "tell" }, ...tell), el("div", { class: "body" }, ...body)));
 
   function picture(p) {
@@ -77,7 +81,46 @@
       return el("div", {}, el("ol", { class: "flow" }, ...(p.steps || []).map((s) => el("li", { class: s.state || "ok" }, el("b", { "aria-hidden": "true", text: mark[s.state] || "✓" }), el("span", {}, s.who ? el("strong", { text: s.who + ": " }) : null, s.label, el("span", { class: "sr", text: " (" + (word[s.state] || "done") + ")" }))))), p.note ? el("p", { class: "pnote", text: p.note }) : null);
     }
     if (p.kind === "numbers") return el("table", { class: "nums" }, el("tbody", {}, ...(p.rows || []).map((r) => el("tr", {}, el("th", { scope: "row", text: r.label }), el("td", { class: r.tone || null, text: r.value })))));
+    if (p.kind === "diff") {
+      const rows = (p.lines || []).map((l) => ({ ...l }));
+      // A removed line next to its replacement: mark only the part that differs.
+      for (let i = 0; i < rows.length;) {
+        if (rows[i].tone !== "del") { i++; continue; }
+        let j = i; while (j < rows.length && rows[j].tone === "del") j++;
+        let k = j; while (k < rows.length && rows[k].tone === "add") k++;
+        if (k - j === j - i) for (let q = 0; q < j - i; q++) {
+          const a = rows[i + q], b = rows[j + q], x = String(a.t), y = String(b.t);
+          let s = 0; while (s < x.length && s < y.length && x[s] === y[s]) s++;
+          let e = 0; while (e < x.length - s && e < y.length - s && x[x.length - 1 - e] === y[y.length - 1 - e]) e++;
+          if (s + e >= 4 && Math.max(x.length, y.length) - s - e <= Math.max(x.length, y.length) * 0.7) { a.em = [s, x.length - e]; b.em = [s, y.length - e]; }
+        }
+        i = Math.max(k, i + 1);
+      }
+      const text = (r) => { const t = String(r.t); return r.em ? [t.slice(0, r.em[0]), el("mark", { text: t.slice(r.em[0], r.em[1]) }), t.slice(r.em[1])] : [t]; };
+      return el("div", { class: "diff" }, el("div", { class: "fname", text: p.file || "" }), el("div", { class: "body" }, ...rows.map((r) => el("div", { class: "dl " + (r.tone || "ctx") }, el("span", { text: r.n ?? "" }), el("span", { class: "sg", "aria-label": r.tone === "add" ? "added" : r.tone === "del" ? "removed" : null, text: r.tone === "add" ? "+" : r.tone === "del" ? "−" : "" }), el("code", {}, ...text(r))))));
+    }
     return null;
+  }
+  // Where a decision lives and what happens now, under its question. The code waits behind a toggle, so the screen still fits.
+  const where = (list) => (list || []).map((w) => (typeof w === "string" ? { at: w } : w));
+  function context(cx) {
+    if (!cx || (!cx.now && !(cx.where || []).length && !cx.pic)) return null;
+    return el("div", { class: "qctx" },
+      cx.now ? el("p", { class: "now" }, el("span", { class: "lab", text: "Now" }), cx.now) : null,
+      (cx.where || []).length ? el("ul", { class: "loc", "aria-label": "Where in the code" }, el("li", { class: "lab", "aria-hidden": "true" }, "Where"), ...where(cx.where).map((w) => el("li", { title: w.t || null }, el("code", { text: w.at }), w.t ? " " + w.t : ""))) : null,
+      cx.pic ? el("details", {}, el("summary", { text: cx.show || "Show the code" }), picture(cx.pic), cx.src ? el("span", { class: "src", text: cx.src }) : null) : null);
+  }
+
+  function viewAbout(s) {
+    const ahead = visible().filter((x) => x.kind !== "about" && x.kind !== "end"), later = STEPS.filter((x) => x.kind === "q" && !shown(x)).length;
+    board(s, [el("p", { class: "intro", text: "What this review is about" }), el("h1", { text: A.what }), A.why ? el("p", { class: "why", text: A.why }) : null],
+      (where(A.where).length || A.pic) ? el("div", { class: "about" },
+        where(A.where).length ? el("section", {}, el("h2", { text: "Where it lives" }), el("ul", { class: "wlist" }, ...where(A.where).map((w) => el("li", {}, el("code", { text: w.at }), w.t ? el("span", { text: w.t }) : null)))) : null,
+        A.pic ? el("section", {}, el("h2", { text: A.picTitle || "What happens now" }), picture(A.pic), A.src ? el("span", { class: "src", text: A.src }) : null) : null) : null,
+      el("section", { class: "ahead" }, el("h2", { text: ahead.length === 1 ? "One decision" : ahead.length + " decisions, one per screen" }),
+        el("ol", {}, ...ahead.map((x) => el("li", {}, el("b", { text: x.h }), x.why ? el("span", { text: x.why }) : null))),
+        later ? el("p", { class: "more", text: later + (later === 1 ? " more question depends" : " more questions depend") + " on your answers." }) : null),
+      el("p", { class: "status", id: "status", role: "status" }), el("pre", { id: "out", hidden: true }));
   }
 
   function viewQuestion(s) {
@@ -97,8 +140,9 @@
     ta.value = S.n[s.id] || "";
     const note = el("div", { class: "note", id: "note" }, el("label", { for: "notetext", text: T.noteLabel }), ta);
     note.hidden = !ta.value;
-    const first = STEPS.indexOf(s) === 0;
-    board(s, [first && C.intro ? el("p", { class: "intro", text: C.intro }) : null, el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : null, s.caption ? el("p", { class: "cap", text: s.caption }) : null], set,
+    const first = counted(STEPS)[0] === s, intro = C.intro || (single && A ? A.what : null);
+    const cx = s.context || (single && A ? { now: A.why, where: A.where, pic: A.pic, src: A.src } : null);
+    board(s, [first && intro ? el("p", { class: "intro", text: intro }) : null, el("h1", { text: s.h }), s.why ? el("p", { class: "why", text: s.why }) : null, s.caption ? el("p", { class: "cap", text: s.caption }) : null, context(cx)], set,
       (s.items || []).length ? el("div", { class: "items" }, ...s.items.map((it) => el("details", {}, el("summary", {}, it.title, it.count ? el("span", { class: "ft", text: it.count }) : null), it.intro ? el("p", { text: it.intro }) : null, el("ul", {}, ...(it.details || []).map((d) => el("li", {}, d.id ? d.id + " " : "", d.text))), it.ref ? el("span", { class: "ft", text: it.ref }) : null))) : "",
       note, s.ref ? el("p", { class: "ref", text: s.id + " · " + s.ref }) : "", el("p", { class: "status", id: "status", role: "status" }), el("pre", { id: "out", hidden: true }));
   }
@@ -124,11 +168,12 @@
   }
 
   function viewEnd(s) {
-    const open = visible().filter((x) => x.kind !== "end" && answer(x) === "Not answered").length;
-    const rows = STEPS.filter((x) => x.kind !== "end").map((x) => {
+    const open = counted(visible()).filter((x) => answer(x) === "Not answered").length;
+    const rows = counted(STEPS).map((x) => {
       const off = !shown(x), o = x.kind === "q" ? picked(x) : null, note = (S.n[x.id] || "").trim();
       return el("div", { class: "row " + hue(x) }, el("span", { class: "q", text: x.h }),
         el("span", { class: "a" + (off ? " skip" : "") }, off ? "Skipped: an earlier answer settled it" : answer(x), !off && o && x.rec && o.id !== x.rec ? el("span", { class: "tag", text: "Not my recommendation" }) : null, !off && o && o.permanent ? el("span", { class: "tag perm", text: "Permanent" }) : null),
+        !off && o && o.does ? el("span", { class: "d", text: o.does }) : null,
         note && !off ? el("span", { class: "n", text: "Note: " + note }) : null,
         off ? null : el("button", { class: "link", type: "button", onclick: () => { returning = true; go(visible().indexOf(x)); } }, "Change", el("span", { class: "sr", text: " " + x.h })));
     });
@@ -141,7 +186,7 @@
     const L = [C.exportHeader || String(C.title || "decide").toUpperCase() + " ANSWERS"];
     const line = (t) => String(t || "").trim().replace(/\s+/g, " ");
     for (const s of STEPS) {
-      if (s.kind === "end") continue;
+      if (s.kind === "end" || s.kind === "about") continue;
       if (s.kind !== "q") {
         L.push("", s.h + " [" + s.id + "]");
         for (const it of s.items) { const on = S.seen[s.id] && S.a[s.id].includes(it.id); L.push("→ " + (!S.seen[s.id] ? "Unanswered" : s.kind === "batch" ? (on ? "Accept" : "Talk about") : on ? "Selected" : "Not selected") + ": " + line(it.name || it.text) + (it.after ? ". " + line(it.after) : "") + " [" + it.id + "]"); }
@@ -191,7 +236,7 @@
       el("button", { class: "link unsure", id: "unsure", type: "button", "aria-pressed": String(!!S.u[s.id]), onclick: () => { if (S.u[s.id]) delete S.u[s.id]; else { S.u[s.id] = true; delete S.a[s.id]; view.querySelectorAll(".opt input").forEach((i) => { i.checked = false; }); } save(); foot(s); } }, T.unsure),
       el("button", { class: "link", id: "addnote", type: "button", onclick: () => { $("note").hidden = false; $("notetext").focus(); } }, T.addNote));
     if (S.at === 0 && !single && STEPS.some((x) => x.kind === "q" && x.rec)) f.append(el("button", { class: "link", id: "acceptall", type: "button", onclick: acceptAll }, T.acceptAll));
-    const label = single ? T.copyOne : s.kind === "batch" ? "Accept " + S.a[s.id].length + " of " + s.items.length : returning ? "Save" : T.next;
+    const label = single ? T.copyOne : s.kind === "about" ? "Start" : s.kind === "batch" ? "Accept " + S.a[s.id].length + " of " + s.items.length : returning ? "Save" : T.next;
     const b = el("button", { class: "btn", id: "next", type: "button", onclick: next }, label, el("span", { class: "kbd", "aria-hidden": "true", text: "Enter" }));
     b.disabled = !ready(s);
     f.append(b);
@@ -202,13 +247,13 @@
   function render() {
     const list = visible();
     S.at = Math.max(0, Math.min(list.length - 1, Number(S.at) || 0));
-    const s = list[S.at], total = list.filter((x) => x.kind !== "end").length;
+    const s = list[S.at], steps = counted(list), pos = s.kind === "end" ? steps.length : steps.indexOf(s);
     view.replaceChildren();
     $("back").style.visibility = S.at ? "visible" : "hidden";
-    $("where").textContent = single ? "" : s.kind === "end" ? "Done" : (groups.length > 1 && s.g ? (s.g.label || s.g.id) + " · " : "") + (S.at + 1) + " of " + total;
+    $("where").textContent = single ? "" : s.kind === "end" ? "Done" : s.kind === "about" ? "About" : (groups.length > 1 && s.g ? (s.g.label || s.g.id) + " · " : "") + (pos + 1) + " of " + steps.length;
     $("app").className = "app " + hue(s);
-    $("bar").replaceChildren(...(single ? [] : list.filter((x) => x.kind !== "end").map((x, i) => el("i", { class: hue(x) + (i <= S.at ? " seen" : "") }))));
-    if (s.kind === "end") viewEnd(s); else if (s.kind === "q") viewQuestion(s); else viewList(s);
+    $("bar").replaceChildren(...(single ? [] : steps.map((x, i) => el("i", { class: hue(x) + (i <= pos ? " seen" : "") }))));
+    if (s.kind === "end") viewEnd(s); else if (s.kind === "q") viewQuestion(s); else if (s.kind === "about") viewAbout(s); else viewList(s);
     foot(s);
   }
 

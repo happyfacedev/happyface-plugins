@@ -18,17 +18,17 @@
     {
       "name": "decide",
       "source": "./plugins/decide",
-      "description": "Make decisions on a visual page: each option is a picture of its result, with its cost."
+      "description": "Make decisions on a visual page: what the change is about, then each option as a picture of its result, with its cost."
     },
     {
       "name": "visualize",
       "source": "./plugins/visualize",
-      "description": "Explain a concept, a change or something the agent did as a bold visual storyboard."
+      "description": "Explain a concept as a bold visual storyboard, or a code change as a brief: what it does, its real code, where to look and every file."
     },
     {
       "name": "visualize-interactive",
       "source": "./plugins/visualize-interactive",
-      "description": "A visual storyboard you can question: click any part and a small, locked-down model answers from checked notes."
+      "description": "A storyboard or change brief you can question: click any part, a line of code included, and a small, locked-down model answers from checked notes."
     }
   ]
 }

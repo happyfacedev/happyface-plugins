@@ -85,9 +85,12 @@
     custom: (p) => PICS[p.id]({ el, svg, chart, state: (state[p.id] ??= {}), rerender: (id) => { render(); if (id && $(id)) $(id).focus({ preventScroll: true }); } }),
   };
   function draw(p) { try { return KINDS[p.kind](p); } catch (e) { return el("p", { class: "cap", role: "alert", text: "This picture failed to draw: " + e.message }); } }
+  // A change brief: its screens are drawn by change.js; every part below is one that can be asked about.
+  const LAYOUT = C.change && typeof CHANGE === "function" ? CHANGE({ el, svg, rich, draw, go: (i) => go(i), frames: F, brief: C.change, interactive: true }) : null;
 
   // ---------- storyboard ----------
-  const SPOTS = ".tell h1, .tell p, .tell .big, .grid > span, .bars > div, .flow > li, .swap > div, .fact, .ln, .pair h2, .fname, .cap, .show svg [data-ask], .show svg text:not(.tick)";
+  const SPOTS = ".tell h1, .tell p, .tell .big, .grid > span, .bars > div, .flow > li, .swap > div, .fact, .ln, .pair h2, .fname, .cap, .show svg:not(.wires) [data-ask], .show svg:not(.wires) text:not(.tick)"
+    + ", .stats li, .tile, .node, .ba2 > div, .flist li, .code figcaption, .cnote, .cl:not(.gap), .firsts li, .riskrow, .chk, .unchk li, .frow";
   const spots = () => [...view.querySelectorAll(SPOTS)], charts = () => [...view.querySelectorAll(".show svg")].filter((g) => g.nearest);
   // After an edit to the step, a pin goes to the part with the same words, else to the step's corner.
   function settle(t) {
@@ -102,11 +105,12 @@
   function render() {
     const f = F[at], last = at === F.length - 1;
     document.title = C.title;
+    const board = f.layout && LAYOUT ? LAYOUT[f.layout](f) : el("section", { class: "board " + f.color + (f.added ? " added" : ""), id: "board" },
+      el("div", { class: "tell" }, el("span", { class: "no", text: f.added ? "From your question" : "Step " + f.n + " of " + C.frames.length }), el("h1", { text: f.heading }), el("p", {}, rich(f.say)), f.added ? el("button", { class: "remove", type: "button", onclick: () => { for (const t of threads) if (t.drawn === f) t.drawn = null; for (let i = threads.length; i--;) if (threads[i].frame === f) { threads[i].stop?.abort(); threads.splice(i, 1); } F.splice(at, 1); go(at - 1); save(); } }, "Remove this step") : null, f.big ? el("div", { class: "big" }, el("b", { text: f.big.value }), el("span", { text: f.big.label })) : null),
+      el("div", { class: "show" }, el("div", { class: "fit" }, draw(f.pic)), f.caption ? el("p", { class: "cap", text: f.caption }) : null, el("p", { class: "src" }, f.src, last && (C.sources || []).length ? [". Sources: ", C.sources.map((s, i) => [i ? ", " : "", el("a", { href: s.url, target: "_blank", rel: "noopener", text: s.label })])] : null)));
+    board.append(el("div", { class: "pins", id: "pins" }));
     view.replaceChildren(
-      el("section", { class: "board " + f.color + (f.added ? " added" : ""), id: "board" },
-        el("div", { class: "tell" }, el("span", { class: "no", text: f.added ? "From your question" : "Step " + f.n + " of " + C.frames.length }), el("h1", { text: f.heading }), el("p", {}, rich(f.say)), f.added ? el("button", { class: "remove", type: "button", onclick: () => { for (const t of threads) if (t.drawn === f) t.drawn = null; for (let i = threads.length; i--;) if (threads[i].frame === f) { threads[i].stop?.abort(); threads.splice(i, 1); } F.splice(at, 1); go(at - 1); save(); } }, "Remove this step") : null, f.big ? el("div", { class: "big" }, el("b", { text: f.big.value }), el("span", { text: f.big.label })) : null),
-        el("div", { class: "show" }, el("div", { class: "fit" }, draw(f.pic)), f.caption ? el("p", { class: "cap", text: f.caption }) : null, el("p", { class: "src" }, f.src, last && (C.sources || []).length ? [". Sources: ", C.sources.map((s, i) => [i ? ", " : "", el("a", { href: s.url, target: "_blank", rel: "noopener", text: s.label })])] : null)),
-        el("div", { class: "pins", id: "pins" })),
+      board,
       el("div", { class: "steps" }, el("button", { class: "ghost", type: "button", disabled: !at, onclick: () => go(at - 1) }, "‹ Back"), el("nav", { class: "nav", "aria-label": "Steps" }, F.map((x, n) => { const c = threads.filter((t) => t.frame === x && t.msgs.length).length; return el("button", { class: x.color + (n < at ? " seen" : "") + (x.added ? " extra" : ""), type: "button", "aria-current": String(n === at), "aria-label": (x.added ? "From your question: " : "Step " + x.n + ": ") + x.key + (c ? ", " + c + (c === 1 ? " comment" : " comments") : ""), onclick: () => go(n) }, x.key, c ? el("span", { class: "count", "aria-hidden": "true", text: c }) : null); })),
         el("button", { class: "go " + f.color, id: "fwd", type: "button", onclick: () => go(last ? 0 : at + 1) }, last ? "Start again" : "Next: " + F[at + 1].key + " ›")));
     $("app").className = "app " + f.color;
@@ -120,6 +124,8 @@
     const largest = (lo, hi, set, over) => { set(hi); if (!over()) return; for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; set(mid); if (over()) hi = mid; else lo = mid; } set(lo); };
     const spills = (n) => n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1;
     const small = innerWidth < 640 ? 0.78 : 0.6;
+    // A change brief's panes scroll instead of shrinking: code must stay readable. Only its color panel is fitted.
+    if (view.querySelector(".brief")) { if (!tell.classList.contains("band")) largest(small, 1.05, (v) => tell.style.setProperty("--s", v), () => spills(tell)); return; }
     largest(small, 1.1, (v) => tell.style.setProperty("--s", v), () => spills(tell));
     // A picture that is one drawing fills the space by itself; anything else is zoomed.
     const art = box.querySelectorAll("svg");
@@ -152,7 +158,9 @@
   }
   function pins() {
     const box = $("pins"), b = $("board").getBoundingClientRect(), mine = threads.filter((t) => t.frame === F[at] && (t.msgs.length || t === cur));
-    box.replaceChildren(...mine.map((t) => { const p = pointOf(t), num = threads.filter((x) => x.frame === t.frame && x.msgs.length).indexOf(t) + 1; return el("button", { type: "button", class: "pin" + (t.stop ? " busy" : "") + (t === cur ? " open" : ""), style: `left:${Math.max(14, Math.min(b.width - 14, p.x - b.left))}px;top:${Math.max(14, Math.min(b.height - 14, p.y - b.top))}px`, "aria-label": "Comment on " + t.about, onclick: (e) => { e.stopPropagation(); t === cur ? close() : open(t); } }, num || "+"); }));
+    // A pin whose part has scrolled out of its pane waits there, unless its comment is open.
+    const away = (t) => { const pane = t !== cur && anchor(t)?.closest(".show"), p = pane && pointOf(t), r = pane && pane.getBoundingClientRect(); return !!pane && (p.y < r.top || p.y > r.bottom); };
+    box.replaceChildren(...mine.filter((t) => !away(t)).map((t) => { const p = pointOf(t), num = threads.filter((x) => x.frame === t.frame && x.msgs.length).indexOf(t) + 1; return el("button", { type: "button", class: "pin" + (t.stop ? " busy" : "") + (t === cur ? " open" : ""), style: `left:${Math.max(14, Math.min(b.width - 14, p.x - b.left))}px;top:${Math.max(14, Math.min(b.height - 14, p.y - b.top))}px`, "aria-label": "Comment on " + t.about, onclick: (e) => { e.stopPropagation(); t === cur ? close() : open(t); } }, num || "+"); }));
     spots().forEach((n, i) => n.classList.toggle("picked", !!cur && cur.frame === F[at] && cur.chart == null && cur.spot === i));
   }
   function open(t, focusFrom) {

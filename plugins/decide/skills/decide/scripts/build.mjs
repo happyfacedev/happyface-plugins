@@ -30,7 +30,20 @@ const STATES = ['ok', 'fail', 'stuck', 'now'];
 
 function checkPanel(id, which, p) {
   if (!p) { problems.push(`${id}: visual.${which} is missing`); return; }
-  if (!['terminal', 'file', 'steps', 'numbers'].includes(p.kind)) { problems.push(`${id}: visual.${which}.kind must be terminal, file, steps or numbers`); return; }
+  if (!['terminal', 'file', 'steps', 'numbers', 'diff'].includes(p.kind)) { problems.push(`${id}: visual.${which}.kind must be terminal, file, steps, numbers or diff`); return; }
+  if (p.kind === 'diff') {
+    const lines = p.lines || [];
+    if (!p.file) problems.push(`${id}: visual.${which} diff has no file`);
+    if (!lines.length || lines.length > 10) problems.push(`${id}: visual.${which} diff has ${lines.length} lines (1 to 10)`);
+    for (const l of lines) {
+      if (l.t == null) problems.push(`${id}: visual.${which} diff has a line without t`);
+      if (!['add', 'del', 'ctx'].includes(l.tone || 'ctx')) problems.push(`${id}: visual.${which} diff tone "${l.tone}" must be add, del or ctx`);
+      if (l.n != null && !Number.isInteger(l.n)) problems.push(`${id}: visual.${which} diff line number "${l.n}" is not a whole number`);
+      if (String(l.t).length > 100) warn.push(`${id}: a ${which} diff line is ${String(l.t).length} characters (aim for 80)`);
+    }
+    if (lines.length && !lines.some((l) => l.tone === 'add' || l.tone === 'del')) warn.push(`${id}: visual.${which} diff adds and removes nothing`);
+    return;
+  }
   if (p.kind === 'numbers') {
     const rows = p.rows || [];
     if (!rows.length || rows.length > 6) problems.push(`${id}: visual.${which} has ${rows.length} rows (1 to 6)`);
@@ -88,6 +101,27 @@ for (const [i, q] of ordered.entries()) {
   const list = q.showIf.is || q.showIf.not;
   if (!Array.isArray(list) || (q.showIf.is && q.showIf.not)) problems.push(`${q.id}: showIf needs either is or not, as a list`);
   else if (on) for (const a of list) if (!choicesOf(on).includes(a)) problems.push(`${q.id}: showIf names "${a}", which is not an answer to ${on.id}`);
+}
+// What the review and each question are about: where in the code, and what happens now.
+const where = (at, list) => {
+  if (list == null) return;
+  if (!Array.isArray(list) || list.length > 6) { problems.push(`${at}: where must be a list of up to 6`); return; }
+  for (const w of list) if (!(typeof w === 'string' ? w.trim() : w?.at)) problems.push(`${at}: a where entry needs at ("path:line")`);
+};
+if (cfg.about != null) {
+  const A = cfg.about;
+  if (!A.what) problems.push('about: what is missing (the change this review is about, in one sentence)');
+  if (words(A.what) > 25) warn.push(`about: what is ${words(A.what)} words (aim for 20 or fewer)`);
+  where('about', A.where);
+  if (A.pic) { checkPanel('about', 'pic', A.pic); if (!A.src) warn.push('about: pic has no src (where it comes from)'); }
+}
+for (const q of cfg.questions || []) {
+  const cx = q.context;
+  if (cx == null) continue;
+  if (cx.now && words(cx.now) > 25) warn.push(`${q.id}: context.now is ${words(cx.now)} words (aim for 20 or fewer)`);
+  where(`${q.id} context`, cx.where);
+  if (cx.pic) { checkPanel(q.id, 'context', cx.pic); if (!cx.src) warn.push(`${q.id}: context.pic has no src (where it comes from)`); }
+  if (!cx.now && !cx.where && !cx.pic) warn.push(`${q.id}: context is empty`);
 }
 for (const it of cfg.batch?.items || []) {
   for (const k of ['id', 'name', 'today', 'after']) if (!it[k]) problems.push(`batch item "${it.id || it.name}" has no ${k}`);

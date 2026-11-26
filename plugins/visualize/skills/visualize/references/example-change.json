@@ -1,0 +1,59 @@
+{
+  "kind": "change",
+  "title": "Theme Toggle",
+  "ask": "Walk me through commit 4c54304.",
+  "source": { "label": "happyface-plugins 4c54304", "url": "https://github.com/happyfacedev/happyface-plugins/commit/4c543043be047acb553281c24b5e05183572bd7a", "state": "Committed 24 Nov 2026", "author": "alexpavelm" },
+  "answer": "decide and visualize pages get a **light and dark button** that remembers your choice, and decide's build check now reads a page with three scripts.",
+  "effort": "~5 min",
+  "changes": [
+    {
+      "id": "toggle", "key": "Toggle", "kind": "feature",
+      "title": "A button switches light and dark",
+      "what": "Both pages get a round button in the corner. It sets `data-theme` on the page and saves the choice in the browser under `happyface-theme`.",
+      "before": "Pages followed the system theme, with no way to switch.",
+      "after": "One click switches; picking the system's own theme follows the system again.",
+      "basis": "From the diff.",
+      "risk": { "level": "low", "t": "The two pages carry the same script, so a fix to one must be copied to the other." },
+      "files": ["plugins/*/skills/*/assets/page.html"],
+      "code": [
+        { "file": "plugins/decide/skills/decide/assets/page.html", "lines": [125, 141], "note": "visualize's page gets the same script.",
+          "notes": [ { "line": 134, "t": "Choosing the theme the system already uses removes the override, so the page follows the system again." } ] }
+      ]
+    },
+    {
+      "id": "probe", "key": "Build check", "kind": "fix",
+      "title": "decide's syntax check joins every script",
+      "what": "The build checks the page's scripts by joining them into one file for `node --check`. It joined only the first boundary between them.",
+      "why": "The new theme script makes three script blocks, so two boundaries.",
+      "before": "A page with a third script would fail the build's syntax check.",
+      "after": "Every boundary is joined, so all three scripts check as one.",
+      "basis": "From the diff.",
+      "files": ["plugins/decide/skills/decide/scripts/build.mjs"],
+      "code": [ { "file": "decide/scripts/build.mjs", "lines": [139, 142], "notes": [ { "line": 140, "t": "`replaceAll`: a plain `replace` stops at the first match." } ] } ]
+    }
+  ],
+  "map": {
+    "layers": ["Build", "Pages", "Browser"],
+    "nodes": [
+      { "id": "build", "label": "decide build.mjs", "layer": "Build", "change": "probe" },
+      { "id": "dpage", "label": "decide page", "layer": "Pages", "change": "toggle" },
+      { "id": "vpage", "label": "visualize page", "layer": "Pages", "change": "toggle" },
+      { "id": "store", "label": "localStorage", "layer": "Browser", "sub": "happyface-theme" }
+    ],
+    "edges": [
+      { "from": "build", "to": "dpage", "change": "probe", "t": "checks" },
+      { "from": "dpage", "to": "store", "change": "toggle", "state": "new", "t": "saves" },
+      { "from": "vpage", "to": "store", "change": "toggle", "state": "new", "t": "saves" }
+    ]
+  },
+  "review": {
+    "heading": "Read the follow rule, then the one-word fix",
+    "say": "Two small changes; the second exists because of the first.",
+    "first": [
+      { "at": "plugins/decide/skills/decide/assets/page.html:134", "t": "When the override is set, kept or cleared.", "change": "toggle" },
+      { "at": "plugins/decide/skills/decide/scripts/build.mjs:140", "t": "Every script boundary is joined before the check.", "change": "probe" }
+    ],
+    "risks": [ { "level": "low", "t": "Two copies of one script", "sub": "decide and visualize each hold the toggle.", "change": "toggle" } ],
+    "unchecked": [ "A host page that sets `data-theme` itself, such as a published artifact." ]
+  }
+}

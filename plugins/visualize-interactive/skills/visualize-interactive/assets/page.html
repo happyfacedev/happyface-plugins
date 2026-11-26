@@ -61,6 +61,11 @@ svg text { font-family: var(--f); fill: var(--ink); } .ax { stroke: var(--muted)
 @media (max-width: 40rem) { .pop { position: fixed; left: 8px; right: 8px; bottom: 8px; top: auto; width: auto; max-height: 60vh; } }
 @media (prefers-reduced-motion: reduce) { .pin.busy { animation: none; opacity: 0.6; } }
 </style>
+<style>
+__CHANGECSS__
+/* In a change brief, a line of code lights up with a bar at its edge instead of a ring. */
+.show .cl.spot { border-radius: 0; } .show .cl.spot:hover { box-shadow: inset 4px 0 0 var(--i); } .show .cl.spot.picked { box-shadow: inset 5px 0 0 var(--focus) !important; } .show .cl.spot:focus-visible { outline-offset: -3px; }
+</style>
 <div class="app" id="app">
   <div class="askline"><p class="ask" id="ask"></p><p class="hintline">Click anything that lights up to ask about it</p><button class="theme" id="theme" type="button"></button></div>
   <main id="view" tabindex="-1"></main>
@@ -94,6 +99,9 @@ const PICS = {};
 </script>
 <script>
 __CUSTOM__
+</script>
+<script>
+__CHANGE__
 </script>
 <script>
 __APP__

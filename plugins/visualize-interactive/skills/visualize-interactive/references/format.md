@@ -1,6 +1,6 @@
-# visualize.json: the input format
+# visualize.json: the storyboard format
 
-`scripts/serve.mjs` checks one JSON file and serves it as a page that answers questions. `example.json` explains a change with built-in pictures; `example-riemann.json` with `example-riemann.js` explains a concept with custom ones and charts.
+`scripts/serve.mjs` checks one JSON file and serves it as a page that answers questions. `example.json` uses every built-in picture; `example-riemann.json` with `example-riemann.js` explains a concept with custom ones and charts. A code change uses the change brief instead: `change-format.md`.
 
 | Key | Required | What it is |
 | --- | --- | --- |

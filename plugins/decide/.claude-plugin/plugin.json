@@ -1,5 +1,5 @@
 {
   "name": "decide",
-  "description": "Turn several open questions into a visual review page answered one question at a time.",
+  "description": "Turn open questions into a visual review page: what the change is about, then one question at a time.",
   "author": { "name": "happyface" }
 }
